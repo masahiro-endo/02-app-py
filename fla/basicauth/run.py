@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
