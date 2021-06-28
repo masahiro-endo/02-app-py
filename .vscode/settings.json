@@ -3,6 +3,8 @@
     "python.analysis.extraPaths": [
         "./fla",
         "./pyg",
+        "./pyg/021-3Ddungeon/source",
+        "./pyg/022-Roguelike",
         "./wx"
     ]
 }
