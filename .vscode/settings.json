@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "C:\\Users\\helpdesk\\Downloads\\Portable\\apps\\win\\python-3.9.5\\python.exe",
+    "python.pythonPath": "c:\\Users\\mendo.MIYA\\Downloads\\Portable\\apps\\win\\python-3.9.5\\python.exe",
     "python.analysis.extraPaths": [
         "./fla",
         "./pyg",
