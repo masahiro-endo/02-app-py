@@ -1,4 +1,5 @@
 import pygame
+import os
 
 from manager.resource_manager import ResourceManager
 
@@ -24,6 +25,9 @@ class SE:
 class SoundManager:
 
     def play_music(self, file_path: str):
+        
+        print(os.path.abspath('./'))
+
         self.stop_music()
         pygame.mixer_music.load(file_path)
         pygame.mixer_music.play(-1)
