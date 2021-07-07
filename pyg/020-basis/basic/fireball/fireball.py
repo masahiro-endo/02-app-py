@@ -3,6 +3,10 @@ import pygame
 from pygame.locals import *
 import math
 import sys
+import os
+os.chdir(os.path.dirname(__file__))
+
+
 
 SCR_RECT = Rect(0, 0, 640, 480)
 START = (320, 240)  # ファイアボールの始点
