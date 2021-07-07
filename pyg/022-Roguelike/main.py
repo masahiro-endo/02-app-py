@@ -7,6 +7,8 @@ from manager.debug_manager import DebugManager
 from scene.scene import Scene
 from scene.scene_title import SceneTitle
 import os
+os.chdir(os.path.dirname(__file__))
+
 
 __SCREEN_SIZE = (144, 144)
 __POWER = 5
@@ -58,5 +60,4 @@ def main():
 
 
 if __name__ == '__main__':
-    os.chdir("./pyg/022-Roguelike/")
     main()

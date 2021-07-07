@@ -2,6 +2,9 @@
 import pygame
 from pygame.locals import *
 import sys
+import os
+os.chdir(os.path.dirname(__file__))
+
 
 SCREEN_SIZE = (640, 480)
 
