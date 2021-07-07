@@ -3,6 +3,10 @@ import pygame
 from pygame.locals import *
 import os
 import sys
+import os
+os.chdir(os.path.dirname(__file__))
+
+
 
 SCR_RECT = Rect(0, 0, 640, 480)
 
