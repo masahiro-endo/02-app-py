@@ -1,0 +1,50 @@
+﻿wid,categ,level,name,wizname,battle,camp,type,target,value,attribute,misc,description
+0,mage,1,onibi,halito,TRUE,FALSE,attack,enemy,1D8,fire,,Fireball to hit a monster for 1-8 damage
+1,mage,1,tate,mogref,TRUE,FALSE,ac,self,-2,,,Reduce the caster's AC by 2
+2,mage,1,shunmin,katino,TRUE,FALSE,status,group,,sleep,slept monster will get twice the damage,Put one enemy group to asleep
+3,mage,2,gps,dumapic,FALSE,TRUE,etc,,,,misc,Locate the precise position in the dungeon
+4,mage,2,kurayami,dilto,TRUE,FALSE,ac,group,2,,,Increase AC by 2 for an enemy group
+5,mage,2,tomei,sopic,TRUE,FALSE,ac,self,-4,2,,Reduce the caster's AC by 4
+,mage,2,tsubasa,(malor),FALSE,TRUE,etc,,,,teleport,Teleport to a known depth
+6,mage,3,taika,mahalito,TRUE,FALSE,attack,group,4D6,fire,,Wall of fire to hit a group of enemies for 4-24 damage
+7,mage,3,kamaitachi,molito,TRUE,FALSE,attack,group,3D6,friendly,,Sharp wind to inflict 3-18 damage to an enemy group
+8,mage,4,kanashibari,morlis,TRUE,FALSE,ac,group,4,,,Increase AC by 4 for an enemy group
+9,mage,4,toketsu,dalto,TRUE,FALSE,attack,group,6D6,cold,,Blizzard to inflict 6-36 damage to an enemy group
+10,mage,4,gouka,lahalito,TRUE,FALSE,attack,group,6D6,fire,,Big fire to inflict 6-36 damage to an enemy group
+11,mage,5,kyofu,mamorlis,TRUE,FALSE,ac,all,4,,,Increase AC by 4 for all enemy groups
+12,mage,5,senmetsu,makanito,TRUE,FALSE,etc,all,,,eliminate lv7 or lower,Eliminate all enemies below Lvl 8
+13,mage,5,zettaireido,madalto,TRUE,FALSE,attack,group,8D8,cold,,Abs. zero to cause 8-64 damage to an enemy group
+14,mage,6,shinoroi,lakanito,TRUE,FALSE,death,group,,,,Kill all air-breathing enemies in a group
+15,mage,6,butsumetsu,zilwan,TRUE,FALSE,attack,enemy,10D200,,undead only,Buddha power to inflict 10-2000 damage to an undead
+16,mage,6,zentomei,masopic,TRUE,FALSE,ac,party,-4,,,Reduce party's AC by 4
+,mage,7,jigokunohonou,,TRUE,FALSE,attack,enemy,20D20,fire,,Inferno to inflict 20-400 damage to a single enemy
+20,mage,7,kakubaku,tiltowait,TRUE,FALSE,attack,all,10D15,,,Nuclear fusion to inflict 10-150 damage to all enemies
+21,priest,1,shukufuku,kalki,TRUE,FALSE,ac,party,-1,,,Reduce party's AC by 1
+22,priest,1,jiai,dios,TRUE,TRUE,heal,member,1D8,,,Restore 1-8 HP to a single target
+23,priest,1,ikari,badios,TRUE,FALSE,attack,enemy,1D8,friendly,,Angry power to inflict 1-8 damage to an enemy
+24,priest,1,akari,milwa,TRUE,TRUE,etc,,,,,A bright light lets you see further for a while
+25,priest,1,mamori,porfic,TRUE,FALSE,ac,self,-4,,,Reduce the caster's AC by 4
+26,priest,2,kabe,matu,TRUE,TRUE,ac,party,-2,,,Reduce party's AC by 2
+27,priest,2,kantei,calfo,FALSE,FALSE,etc,,,,identify trap,Identify a trap with 95% accuracy
+28,priest,2,nero,manifo,TRUE,FALSE,status,group,,sleep,,Put a group of enemies into asleep
+29,priest,2,damare,monitino,TRUE,FALSE,status,group,1D4+1,silence,59 + 5*level_diff %,Silence an enemy group
+30,priest,3,hikarinotama,lomilwa,TRUE,TRUE,etc,,,,misc,A bright light lets you see further for a long time
+31,priest,3,okiro,dialko,TRUE,TRUE,cure,member,,"paraly, sleep",cure paraly + sleep,Cures a paralyzed or asleep for a single target
+32,priest,3,shikibetsu,latumapic,TRUE,TRUE,etc,,,,identify enemy,Identify enemies
+33,priest,3,kaminohogo,bamatu,TRUE,FALSE,ac,party,-4,,,Reduce party's AC by 4
+34,priest,3,iyashi,dial,TRUE,TRUE,heal,member,4D4,,,Restore 4-16 HP to a single target
+35,priest,4,gekido,badial,TRUE,FALSE,attack,enemy,2D8,friendly,,Infuriate power to inflict 2-16 damage to an enemy
+36,priest,4,gedoku,latumofis,TRUE,TRUE,cure,member,,poison,,Cure poison to a single target
+37,priest,4,hogo,maporfic,TRUE,TRUE,etc,,-2,,party AC -2 while in dungeon,Reduce party's AC by 2 while you are in the dungeon
+,priest,4,zenjiai,,TRUE,TRUE,heal,party,1D8+2,,,Heal entire party by 1-8 HP
+38,priest,5,daikaifuku,dialma,TRUE,TRUE,heal,member,8D3,,,Restore 8-24 HP to a single target
+39,priest,5,chogekido,badialma,TRUE,FALSE,attack,enemy,3D8,friendly,,Extreme angry to inflict 3-24 damage to an enemy
+40,priest,5,kaminoikari,litokan,TRUE,FALSE,attack,group,3D8,fire,,God's fire inflicts 3-24 damage to an enemy group
+42,priest,5,sosei,di,FALSE,TRUE,etc,member,,,misc,Attempt to ressurect a dead character
+43,priest,5,shisubeshi,badi,TRUE,FALSE,death,enemy,,,"misc, max(74, 49 + 5*level_diff) %",Attempt to kill an enemy
+44,priest,6,tenchu,lorto,TRUE,FALSE,attack,group,6D6,friendly,,Gods power to inflict 6-36 damage to an enemy group
+45,priest,6,kanzen,madi,TRUE,TRUE,etc,member,,,misc,Complete heal & cure
+46,priest,6,hinshi,mabadi,TRUE,FALSE,etc,enemy,,,almost kill,Gods power to almost kill a single enemy
+48,priest,7,tenchihokai,malikto,TRUE,FALSE,attack,all,12D6,,,A meteor strike inflicts 12-72 damage to all enemies
+49,priest,7,fukkatsu,kadorto,FALSE,TRUE,etc,member,,,misc,Attempt to resurrent an even ashed person
+,priest,7,zenkai,,TRUE,TRUE,heal,party,8D3,,,8-24 HP group heal to party
