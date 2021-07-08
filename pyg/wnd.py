@@ -3,7 +3,7 @@ from pygame.locals import *
 import sys
 
 
-
+global WSIZE
 WSIZE:int = 0
 
 
@@ -23,6 +23,11 @@ def main():
             if event.type == QUIT:  # 閉じるボタンが押されたら終了
                 pygame.quit()       # Pygameの終了(画面閉じられる)
                 sys.exit()
+            
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
 
             if event.type == MOUSEBUTTONDOWN:
                 if WSIZE == FULLSCREEN:
