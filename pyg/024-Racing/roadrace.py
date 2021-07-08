@@ -1,6 +1,9 @@
 import math
 import pygame
 import numpy as np
+import os
+os.chdir(os.path.dirname(__file__))
+
 
 
 class Car(pygame.sprite.Sprite):
@@ -9,7 +12,7 @@ class Car(pygame.sprite.Sprite):
 
         super(Car, self).__init__()
 
-        self._original_image = pygame.image.load('smallcar.png')
+        self._original_image = pygame.image.load('resource/car.png')
         self.image = self._original_image
         self.rect = self.image.get_rect()
 
