@@ -1,10 +1,14 @@
 import pygame,sys
 pygame.init() #initializes the Pygame
-from pygame.locals import* #import all modules from Pygame
+from pygame.locals import * #import all modules from Pygame
 import random
 import math
 import time
 screen = pygame.display.set_mode((798,600))
+import os
+os.chdir(os.path.dirname(__file__))
+
+
 
 #initializing pygame mixer
 pygame.mixer.init()
@@ -13,18 +17,18 @@ pygame.mixer.init()
 pygame.display.set_caption('Racing Beast')
 
 #changing the logo
-logo = pygame.image.load('car game/logo.jpeg')
+logo = pygame.image.load('resource/logo.jpeg')
 pygame.display.set_icon(logo)
 
 
 ############ MAKING INTRO SCREEEN ###########
 IntroFont = pygame.font.Font("freesansbold.ttf", 38)
 def introImg(x,y):
-    intro = pygame.image.load("car game\intro.png")
+    intro = pygame.image.load("resource/intro.png")
     
     screen.blit(intro,(x,y))
 def instructionIMG(x,y):
-    instruct = pygame.image.load("car game\instruction.png")
+    instruct = pygame.image.load("resource/instruction.png")
     run = True
     while run:
         screen.blit(instruct,(x,y))
@@ -34,7 +38,7 @@ def instructionIMG(x,y):
                 run = False
 
 def aboutIMG(x,y):
-    aboutimg = pygame.image.load("car game\About.png")
+    aboutimg = pygame.image.load("resource/About.png")
     run = True
     while run:
         screen.blit(aboutimg,(x,y))
@@ -55,7 +59,7 @@ def Instruction(x,y):
 
 def introscreen():
     run = True
-    pygame.mixer.music.load('car game/startingMusic.mp3')
+    pygame.mixer.music.load('resource/startingMusic.mp3')
     pygame.mixer.music.play()
     while run :
         screen.fill((0,0,0))
@@ -117,7 +121,7 @@ def introscreen():
   ###### Countdown ######
 def countdown():
     font2 = pygame.font.Font('freesansbold.ttf', 85)
-    countdownBacground = pygame.image.load('car game/bg.png')
+    countdownBacground = pygame.image.load('resource/bg.png')
     three = font2.render('3',True, (187,30,16))
     two =   font2.render('2',True, (255,255,0))
     one =   font2.render('1',True, (51,165,50))
@@ -171,10 +175,10 @@ def countdown():
 def gameloop():
 
       ####### music ####### 
-    pygame.mixer.music.load('car game\BackgroundMusic.mp3')
+    pygame.mixer.music.load('resource/BackgroundMusic.mp3')
     pygame.mixer.music.play()
     ###### sound effect for collision ######
-    crash_sound = pygame.mixer.Sound('car game\car_crash.wav')
+    crash_sound = pygame.mixer.Sound('resource/car_crash.wav')
 
     ####### scoring part ######
     score_value = 0
@@ -185,7 +189,7 @@ def gameloop():
         screen.blit(score, (x,y))
 
     #highscore part
-    with open ("car game\highscore.txt","r") as f:
+    with open ("resource/highscore.txt","r") as f:
             highscore = f.read()
     def show_highscore(x,y):
         Hiscore_text = font1.render('HISCORE :' + str(highscore),True,(255,0,0))
@@ -195,7 +199,7 @@ def gameloop():
     ###### creating our game over function #######
 
     def gameover():
-        gameoverImg = pygame.image.load("car game\gameover.png")
+        gameoverImg = pygame.image.load("resource/gameover.png")
         run = True
         while run:
 
@@ -220,27 +224,27 @@ def gameloop():
         
     
     #setting background image
-    bg = pygame.image.load('car game/bg.png')
+    bg = pygame.image.load('resource/bg.png')
     
     
     # setting our player
-    maincar = pygame.image.load('car game\car.png')
+    maincar = pygame.image.load('resource/car.png')
     maincarX = 350
     maincarY = 495
     maincarX_change = 0
     maincarY_change = 0
 
     #other cars
-    car1 = pygame.image.load('car game\car1.jpeg')
+    car1 = pygame.image.load('resource/car1.jpeg')
     car1X = random.randint(178,490)
     car1Y = 100
     car1Ychange = 10    
-    car2 = pygame.image.load('car game\car2.png')
+    car2 = pygame.image.load('resource/car2.png')
     car2X = random.randint(178,490)
     car2Y = 100
     car2Ychange = 10
 
-    car3 = pygame.image.load('car game\car3.png')
+    car3 = pygame.image.load('resource/car3.png')
     car3X = random.randint(178,490)
     car3Y = 100
     car3Ychange = 10
@@ -454,7 +458,7 @@ def gameloop():
             
         
         # writing to our highscore.txt file
-        with open ("car game\highscore.txt","w") as f:
+        with open ("resource/highscore.txt","w") as f:
             f.write(str(highscore))
         
 
