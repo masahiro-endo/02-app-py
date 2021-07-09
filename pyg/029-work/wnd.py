@@ -3,11 +3,11 @@ from pygame.locals import *
 import sys
 
 
-global WSIZE
-WSIZE:int = 0
 
 
 def main():
+    wsize:int = 0
+
     pygame.init()                                   # Pygameの初期化
     screen = pygame.display.set_mode((300, 200),FULLSCREEN)    # 大きさ600*500の画面を生成
     pygame.display.set_caption("GAME")              # タイトルバーに表示する文字
@@ -30,12 +30,8 @@ def main():
                     sys.exit()
 
             if event.type == MOUSEBUTTONDOWN:
-                if WSIZE == FULLSCREEN:
-                    WSIZE = 0
-                    screen = pygame.display.set_mode((300, 200),WSIZE)
-                else:
-                    WSIZE = FULLSCREEN
-                    screen = pygame.display.set_mode((300, 200),WSIZE)
+                wsize = 0 if wsize != 0 else FULLSCREEN
+                screen = pygame.display.set_mode((300, 200),wsize)
 
 
 
