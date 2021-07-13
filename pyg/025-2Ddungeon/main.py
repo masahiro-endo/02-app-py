@@ -11,6 +11,10 @@ import pygame
 
 from src.scenes.start_screen import StartScreen
 
+import os
+os.chdir(os.path.dirname(__file__))
+
+
 
 def show_fps(
     surface: pygame.Surface, inner_clock: pygame.time.Clock, font: pygame.font.Font
