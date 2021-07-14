@@ -7,6 +7,7 @@ and let the main loop running.
 The pygame events are catch here and delegated to the start screen.
 """
 
+from typing import Any
 import pygame
 from src.scenes.start_screen import StartScreen
 import os
@@ -96,8 +97,8 @@ if __name__ == "__main__":
     constant_sprites.init_constant_sprites()
 
     # Load some data
-    races = loader.load_races()
-    classes = loader.load_classes()
+    races: dict[str ,dict[str ,Any]] = loader.load_races()
+    classes: dict[str ,dict[str ,Any]] = loader.load_classes()
     Character.init_data(races, classes)
 
     start_screen = StartScreen(main_window)

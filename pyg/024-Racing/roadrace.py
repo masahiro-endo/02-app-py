@@ -7,7 +7,7 @@ os.chdir(os.path.dirname(__file__))
 
 
 class Car(pygame.sprite.Sprite):
-    def __init__(self, surface):
+    def __init__(self, surface: pygame.Surface):
         self.bounded_rect = surface.get_rect()
 
         super(Car, self).__init__()
@@ -24,7 +24,7 @@ class Car(pygame.sprite.Sprite):
         # Set the car straight by just pointing to the original image
         self.image = self._original_image
 
-    def move(self, x, y):
+    def move(self, x: int, y: int):
         if y < 0:
             # If we move down, rotate the image a bit so it looks like it's actually steering down
             self.image = pygame.transform.rotate(self._original_image, -5)
@@ -54,7 +54,7 @@ class CarGame(object):
     # The length of the gap between the lines
     MIDDLE_LINE_GAP = 80
 
-    def __init__(self, width=640, height=400):
+    def __init__(self, width: int=640, height: int=400):
         # Initialize the game
         pygame.init()
         pygame.display.set_caption("Python4PHP Road Game")
@@ -82,6 +82,7 @@ class CarGame(object):
 
         # Paint initial road (it will be a straight road since we don't update the road)
         for i in range(self.width):
+            print(i)
             self.paint_road()
 
         # Create our angles for curving the road
@@ -170,6 +171,7 @@ class CarGame(object):
 
             # Update and paint the road on our background
             for i in range(self.SPEED):
+                print(i)
                 self.update_road()
                 self.paint_road()
 
@@ -260,7 +262,7 @@ class CarGame(object):
             self.background.set_at((0, int(self.road_center[0]+1)), c)
 
 
-    def plot_text(self, x, y, text):
+    def plot_text(self, x: int, y: int, text: str):
         surface = self.font.render(text, True, (0, 0, 0))
         self.screen.blit(surface, (x, y))
 
