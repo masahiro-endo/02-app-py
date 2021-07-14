@@ -4,7 +4,7 @@
         "./fla",
         "./pyg",
         "./pyg/020-basis",
-        "./pyg/021-3Ddungeon",
+        "./pyg/021-3Ddungeon/source",
         "./pyg/022-Roguelike",
         "./pyg/023-Shooting",
         "./pyg/024-Racing",
