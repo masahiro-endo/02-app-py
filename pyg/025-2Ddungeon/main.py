@@ -8,9 +8,7 @@ The pygame events are catch here and delegated to the start screen.
 """
 
 import pygame
-
 from src.scenes.start_screen import StartScreen
-
 import os
 os.chdir(os.path.dirname(__file__))
 
