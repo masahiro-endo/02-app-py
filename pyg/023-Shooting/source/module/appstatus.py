@@ -5321,50 +5321,9 @@ class AppStatus:
             self.write_system_data_num(128 -1 +8,10+i,  8,int(self.replay_control_data_size[i])) #座標(128,10+i)に8ケタのコントロールパッド入力データが記録されたファイルのデータサイズを書き込みます
         pyxel.save("assets/replay/" + slot_num + "/replay_status.pyxres") #プレイステータスファイルをセーブ！
 
-    #!###############################################################################################################################
-    #!################################################################################################################################
-    #!draw関数から呼び出される関数群 ###################################################################################################
-    #!###############################################################################################################################
-    #!################################################################################################################################
-    #IPLメッセージの表示#######################################
-    def draw_ipl(self):
-        #テキストスクリーンリスト全体の行数を数える
-        text_number_of_lines_count = len(self.text_screen)
-        #どれだけの行が画面上に流れていったのか計算します
-        #標準フォントの縦ドット数は6で行間空白として1ドット取りたいので全体で縦7ドット
-        #120÷7 =17.14 で画面全体では約17行表示出来ることに成ります
-        if text_number_of_lines_count > 17: #テキストスクリーンの行数が17を超えていたら上にスクロールアウトしていることに成るので・・
-            self.text_console_scroll_counter = text_number_of_lines_count - 17 #上にスクロールした行数を計算します      
-        for i in range(text_number_of_lines_count):
-            text_mes = self.text_screen[i][0]
-            text_col = self.text_screen[i][1]
-            pyxel.text(0,i*6 - self.text_console_scroll_counter * 6 ,str(text_mes),text_col) #y軸をスクロールした行数分だけマイナス方向に補正し画面外(上方向)から前部のテキストを表示するときちんと表示されます
 
-    #タイトルの表示#######################################
-    def draw_title(self):
-        for i in range(160):
-            pyxel.blt(0,14 + i  * self.title_oscillation_count % 200 - self.title_slash_in_count,    IMG2,  0,192,  i*1.09,32,   0)
-        for i in range(160+1000):
-            pyxel.blt(0,14 + i % 1000 * self.title_oscillation_count - self.title_oscillation_count, IMG2,  0,192,  i    ,32,   0)
-            
-        #デバッグ用に現在のステージ数とループ数とその他いろいろ表示する
-        #ステージ数の表示
-        pyxel.text(160-3*8+8,1,"ST " + str(self.stage_number), 9)
-        #周回数の表示
-        pyxel.text(160-3*8+8,8,"LP " + str(self.stage_loop), 7)
-        #ボスモード選択中の表示
-        pyxel.text(160-6*8,1,"BOSS " + str(self.boss_test_mode),8)
-        #ボスヒットボックス
-        pyxel.text(160-19*3+8,8,"HITBOX " + str(self.boss_collision_rect_display_flag),10)
-        #難易度の表示
-        pyxel.text(0,1,"DIFFICULTY " + str(self.game_difficulty),10)
 
-    #背景の星の表示
-    def draw_star(self):
-        stars_count = len(self.stars)
-        for i in range(stars_count):
-            pyxel.pset(self.stars[i].posx, self.stars[i].posy,self.stars[i].posx  // 4 % 15) 
-            #pyxel.pset(self.stars[i].posx, self.stars[i].posy,self.s_rndint(0,7)) 
+
 
     #敵の表示
     def draw_enemy(self):

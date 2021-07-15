@@ -1,10 +1,10 @@
 
+from typing import List
 import pyxel
-from actor import *
 
 class AppBg:
 
-    stars:
+    stars: List[Star]
 
     def __init__(self):
         pass
@@ -15,7 +15,6 @@ class AppBg:
             if len(self.stars) < 600:
                 new_stars = Star()
                 new_stars.update(WINDOW_W + 1,self.s_rndint(0,WINDOW_H),self.s_rndint(1,50))
-                # new_stars.update(WINDOW_W + 1,randint(0,WINDOW_H),randint(1,50))
                 self.stars.append(new_stars)
 
     #背景の星の更新（移動）
@@ -31,6 +30,26 @@ class AppBg:
 
 
 
+
+    #背景の星の表示
+    def draw_star(self):
+        stars_count = len(self.stars)
+        for i in range(stars_count):
+            pyxel.pset(self.stars[i].posx, self.stars[i].posy,self.stars[i].posx  // 4 % 15) 
+            #pyxel.pset(self.stars[i].posx, self.stars[i].posy,self.s_rndint(0,7)) 
+
+
+
+class Star:#背景の流れる星のクラス設定
+    def __init__(self):
+        self.posx = 0
+        self.posy = 0
+        self.speed = 0
+
+    def update(self,x , y, speed):
+        self.posx = x
+        self.posy = y
+        self.speed = speed
 
 
 

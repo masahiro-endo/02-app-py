@@ -1648,16 +1648,6 @@ class Claw_shot:#クローショット（クローの弾）のクラス設定
         self.shot_power = shot_power
         self.shot_hp = shot_hp
 
-class Star:#背景の流れる星のクラス設定
-    def __init__(self):
-        self.posx = 0
-        self.posy = 0
-        self.speed = 0
-
-    def update(self,x , y, speed):
-        self.posx = x
-        self.posy = y
-        self.speed = speed
 
 class Enemy(Ship):#敵キャラ達のクラス設定
     def __init__(self):

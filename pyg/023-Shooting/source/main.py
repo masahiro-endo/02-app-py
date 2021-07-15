@@ -34,21 +34,21 @@ class App:
 
     def update(self):
         ################################起動処理中 IPL ###################################################################
-        if self.game_status == SCENE_IPL:         #ゲームステータスが「SCENE_IPL」の場合IPLメッセージの更新を行う
+        if self._sys.game_status == SCENE_IPL:         #ゲームステータスが「SCENE_IPL」の場合IPLメッセージの更新を行う
             self._sys.update_ipl()                     #IPLの更新
         
         ################################ タイトル関連の変数を初期化 ###################################################################
-        if self.game_status == SCENE_TITLE_INIT:  #ゲームステータスが「SCENE_TITLE_INIT」の場合タイトル関連の変数を初期化する関数を呼び出す
+        if self._sys.game_status == SCENE_TITLE_INIT:  #ゲームステータスが「SCENE_TITLE_INIT」の場合タイトル関連の変数を初期化する関数を呼び出す
             self._sys.update_title_init()              #タイトル関連の変数の初期化関数を呼び出す
         
         ################################ タイトル ###################################################################
-        if self.game_status == SCENE_TITLE:       #ゲームステータスが「SCENE_TITLE」の場合タイトルの更新を行う
+        if self._sys.game_status == SCENE_TITLE:       #ゲームステータスが「SCENE_TITLE」の場合タイトルの更新を行う
             self._sys.update_title()                   #タイトルの更新
             self._bg.update_append_star()             #背景の星の追加＆発生育成関数呼び出し
             self._bg.update_star()                    #背景の星の更新（移動）関数呼び出し
-        
+        '''
         ################################ タイトルでメニュー選択中 ###################################################################
-        if self.game_status == SCENE_TITLE_MENU_SELECT:
+        if self._sys.game_status == SCENE_TITLE_MENU_SELECT:
             self._sys.update_title_menu_select()       #タイトルでのメニュー選択処理をする関数の呼び出し
             self._sys.update_append_star()             #背景の星の追加＆発生育成関数呼び出し
             self._sys.update_star()                    #背景の星の更新（移動）関数呼び出し
@@ -56,7 +56,8 @@ class App:
             self._sys.update_clip_window()             #画面外にはみ出たウィンドウを消去する関数の呼び出し
             self._sys.update_active_window()           #現在アクティブ(最前面)になっているウィンドウのインデックス値(i)を求める関数の呼び出し
             self._sys.update_select_cursor()           #セレクトカーソルでメニューを選択する関数を呼び出す
-'''        
+    
+                
         ############################### ロード用リプレイデータスロットの選択中 #######################################################
         if self.game_status == SCENE_SELECT_LOAD_SLOT:#「SCENE_SELECT_LOAD_SLOT」の時は
             self._sys.update_append_star()                 #背景の星の追加＆発生育成関数呼び出し
@@ -364,14 +365,14 @@ class App:
         
         if self.select_cursor_flag == 1:  #セレクトカーソルを動かすフラグが立っているのならカーソルの移動更新を行う
             self.update_select_cursor()     #セレクトカーソルでメニューを選択する関数を呼び出す
-''' 
+        ''' 
 
     def draw(self):
-        pyxel.cls(self.bg_cls_color)                #背景を指定色で消去する(初期値は0なので真っ黒になります)
-        if self.game_status == SCENE_IPL:
+        pyxel.cls(self._sys.bg_cls_color)                #背景を指定色で消去する(初期値は0なので真っ黒になります)
+        if self._sys.game_status == SCENE_IPL:
             self.draw_ipl()
         
-        if self.game_status == SCENE_TITLE or self.game_status == SCENE_TITLE_MENU_SELECT or self.game_status == SCENE_SELECT_LOAD_SLOT:
+        if self._sys.game_status == SCENE_TITLE or self._sys.game_status == SCENE_TITLE_MENU_SELECT or self._sys.game_status == SCENE_SELECT_LOAD_SLOT:
             self.draw_star()          #背景の星を表示する関数の呼び出し
             self.draw_title()         #タイトルロゴの表示関数の呼び出し
             self.draw_window()        #メニューウィンドウの表示関数の呼び出し
