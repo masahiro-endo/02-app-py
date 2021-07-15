@@ -3,15 +3,12 @@ from random import random    #random.random() と呼ぶと、0から1の範囲(1
 import math
 import pyxel
 import pygame.mixer #MP3再生するためだけに使用する予定・・・予定は未定・・・そして未定は確定に！やったあぁ！
-import module.actor
-import module.state
+from source.module.const import *
+from source.module.state import *
+from source.module.actor import *
 
 
 class App:
-    ##########################################################################################################################################
-    #関数を定義沢山定義するところだよ############################################################################################################
-    #なんかpythonではこのあたり（Appクラスの __init__関数定義が終わったあたり）で定義しないとエラーが出るらしい
-    #確かに関数定義をしないで関数呼び出したらエラーになるよなぁ・・・最初は関数定義はどこでも定義できると思って最後の方で定義してエラー出て悩んでたよ
     
     def __init__(self):
         pygame.mixer.init()  #pygameミキサー関連の初期化 pyxel.initよりも先にpygameをinitしないと上手く動かないみたい・・・
@@ -10134,4 +10131,7 @@ class App:
             or self.game_status == SCENE_GAME_OVER_STOP\
             or self.game_status == SCENE_RETURN_TITLE:
             self.draw_gameover_dialog()          #ゲームオーバー表示をする関数呼び出し
-App()
+
+
+if __name__ == "__main__":
+    App()
