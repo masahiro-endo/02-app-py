@@ -5,6 +5,7 @@ import pyxel
 import pygame.mixer #MP3再生するためだけに使用する予定・・・予定は未定・・・そして未定は確定に！やったあぁ！
 from source.module.const import *
 from source.module.state import *
+from source.module.apconfig import *
 from source.module.actor import *
 
 
