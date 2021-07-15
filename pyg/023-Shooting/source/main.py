@@ -3,18 +3,19 @@ from random import random    #random.random() と呼ぶと、0から1の範囲(1
 import math
 import pyxel
 import pygame.mixer #MP3再生するためだけに使用する予定・・・予定は未定・・・そして未定は確定に！やったあぁ！
-from source.module.state import *
-from source.module.appconfig import *
+from source.module.appsystem import AppSytem
+from source.module.appview import *
 from source.module.actor import *
 
 
 class App:
-    
+    sys: AppSytem = AppSytem()
+
     def __init__(self):
         pygame.mixer.init()  #pygameミキサー関連の初期化 pyxel.initよりも先にpygameをinitしないと上手く動かないみたい・・・
         pyxel.init(WINDOW_W,WINDOW_H,caption="CODE OF PYTHON",fps = 60) #ゲームウィンドウのタイトルバーの表示とfpsの設定(60fpsにした)
         
-        self.load_system_data()        #システムデータをロードする関数の呼び出し
+        self.sys.load_system_data()        #システムデータをロードする関数の呼び出し
         if self.fullscreen_mode == 1:  #フルスクリーン起動モードフラグが立っていたのなら
             pyxel.init(WINDOW_W,WINDOW_H,caption="CODE OF PYTHON",fps = 60,fullscreen = True) #フルスクリーンでpyxelを再起動する
         pyxel.mouse(False)             #マウスカーソルを非表示にする
