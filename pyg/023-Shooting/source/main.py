@@ -3,25 +3,28 @@ from random import random    #random.random() と呼ぶと、0から1の範囲(1
 import math
 import pyxel
 import pygame.mixer #MP3再生するためだけに使用する予定・・・予定は未定・・・そして未定は確定に！やったあぁ！
-from source.module.appsystem import AppSytem
+from source.module.const import *
+from source.module.appsystem import *
 from source.module.appview import *
 from source.module.actor import *
 
 
 class App:
-    sys: AppSytem = AppSytem()
+    _sys: AppSytem
 
     def __init__(self):
+        self._sys = AppSytem()
+
         pygame.mixer.init()  #pygameミキサー関連の初期化 pyxel.initよりも先にpygameをinitしないと上手く動かないみたい・・・
         pyxel.init(WINDOW_W,WINDOW_H,caption="CODE OF PYTHON",fps = 60) #ゲームウィンドウのタイトルバーの表示とfpsの設定(60fpsにした)
         
-        self.sys.load_system_data()        #システムデータをロードする関数の呼び出し
-        if self.fullscreen_mode == 1:  #フルスクリーン起動モードフラグが立っていたのなら
+        self._sys.load_system_data()        #システムデータをロードする関数の呼び出し
+        if self._sys._sts.fullscreen_mode == 1:  #フルスクリーン起動モードフラグが立っていたのなら
             pyxel.init(WINDOW_W,WINDOW_H,caption="CODE OF PYTHON",fps = 60,fullscreen = True) #フルスクリーンでpyxelを再起動する
         pyxel.mouse(False)             #マウスカーソルを非表示にする
         
-        self.load_kanji_font_data()            #漢字フォントデータのローディング
-        self.select_cursor_flag = 0            #セレクトカーソルの移動更新フラグはoffにして初期化しておく
+        self._sys.load_kanji_font_data()            #漢字フォントデータのローディング
+        self._sys.select_cursor_flag = 0            #セレクトカーソルの移動更新フラグはoffにして初期化しておく
         
         #毎フレームごとにupdateとdrawを呼び出す
         pyxel.run(self.update,self.draw)#この命令でこれ以降は１フレームごとに自動でupdate関数とdraw関数が交互に実行されることとなります
