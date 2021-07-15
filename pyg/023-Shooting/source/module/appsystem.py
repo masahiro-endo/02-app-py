@@ -1,14 +1,16 @@
 
 
 import pyxel
-from module.appstatus import AppStatus
-
+from appbg import *
+from appstatus import *
 
 class AppSytem:
 
+    _bg: AppBg
     _sts: AppStatus
 
     def __init__(self):
+        self._bg = AppBg()
         self._sts = AppStatus()
 
 

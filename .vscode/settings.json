@@ -10,6 +10,8 @@
         "./pyg/024-Racing",
         "./pyg/025-2Ddungeon",
         "./pyg/029-work",
-        "./wx"
+        "./wx",
+        "./pyg/023-Shooting/source/module",
+        "./pyg/023-Shooting/source"
     ]
 }

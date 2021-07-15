@@ -3,7 +3,7 @@ from random import random    #random.random() と呼ぶと、0から1の範囲(1
 import math
 import pyxel
 import pygame.mixer #MP3再生するためだけに使用する予定・・・予定は未定・・・そして未定は確定に！やったあぁ！
-from module.const import *
+from module.appconst import *
 from module.appsystem import *
 from module.appview import *
 from module.actor import *
@@ -44,8 +44,8 @@ class App:
         ################################ タイトル ###################################################################
         if self.game_status == SCENE_TITLE:       #ゲームステータスが「SCENE_TITLE」の場合タイトルの更新を行う
             self._sys.update_title()                   #タイトルの更新
-            self._sys.update_append_star()             #背景の星の追加＆発生育成関数呼び出し
-            self._sys.update_star()                    #背景の星の更新（移動）関数呼び出し
+            self._bg.update_append_star()             #背景の星の追加＆発生育成関数呼び出し
+            self._bg.update_star()                    #背景の星の更新（移動）関数呼び出し
         
         ################################ タイトルでメニュー選択中 ###################################################################
         if self.game_status == SCENE_TITLE_MENU_SELECT:
@@ -56,7 +56,7 @@ class App:
             self._sys.update_clip_window()             #画面外にはみ出たウィンドウを消去する関数の呼び出し
             self._sys.update_active_window()           #現在アクティブ(最前面)になっているウィンドウのインデックス値(i)を求める関数の呼び出し
             self._sys.update_select_cursor()           #セレクトカーソルでメニューを選択する関数を呼び出す
-        
+'''        
         ############################### ロード用リプレイデータスロットの選択中 #######################################################
         if self.game_status == SCENE_SELECT_LOAD_SLOT:#「SCENE_SELECT_LOAD_SLOT」の時は
             self._sys.update_append_star()                 #背景の星の追加＆発生育成関数呼び出し
@@ -364,7 +364,7 @@ class App:
         
         if self.select_cursor_flag == 1:  #セレクトカーソルを動かすフラグが立っているのならカーソルの移動更新を行う
             self.update_select_cursor()     #セレクトカーソルでメニューを選択する関数を呼び出す
-        
+''' 
 
     def draw(self):
         pyxel.cls(self.bg_cls_color)                #背景を指定色で消去する(初期値は0なので真っ黒になります)
