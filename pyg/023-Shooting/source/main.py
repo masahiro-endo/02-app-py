@@ -3,11 +3,12 @@ from random import random    #random.random() と呼ぶと、0から1の範囲(1
 import math
 import pyxel
 import pygame.mixer #MP3再生するためだけに使用する予定・・・予定は未定・・・そして未定は確定に！やったあぁ！
-from source.module.const import *
-from source.module.appsystem import *
-from source.module.appview import *
-from source.module.actor import *
-
+from module.const import *
+from module.appsystem import *
+from module.appview import *
+from module.actor import *
+import os
+os.chdir(os.path.dirname(__file__))
 
 class App:
     _sys: AppSytem
@@ -19,52 +20,51 @@ class App:
         pyxel.init(WINDOW_W,WINDOW_H,caption="CODE OF PYTHON",fps = 60) #ゲームウィンドウのタイトルバーの表示とfpsの設定(60fpsにした)
         
         self._sys.load_system_data()        #システムデータをロードする関数の呼び出し
-        if self._sys._sts.fullscreen_mode == 1:  #フルスクリーン起動モードフラグが立っていたのなら
-            pyxel.init(WINDOW_W,WINDOW_H,caption="CODE OF PYTHON",fps = 60,fullscreen = True) #フルスクリーンでpyxelを再起動する
+
         pyxel.mouse(False)             #マウスカーソルを非表示にする
         
         self._sys.load_kanji_font_data()            #漢字フォントデータのローディング
         self._sys.select_cursor_flag = 0            #セレクトカーソルの移動更新フラグはoffにして初期化しておく
         
         #毎フレームごとにupdateとdrawを呼び出す
-        pyxel.run(self.update,self.draw)#この命令でこれ以降は１フレームごとに自動でupdate関数とdraw関数が交互に実行されることとなります
-                                        #近年のゲームエンジンはみんなこんな感じらしい？？？unityやUEもこんな感じなのかな？？使ったことないけど
+        pyxel.run(self.update,self.draw)
+
 
 
 
     def update(self):
         ################################起動処理中 IPL ###################################################################
         if self.game_status == SCENE_IPL:         #ゲームステータスが「SCENE_IPL」の場合IPLメッセージの更新を行う
-            self.update_ipl()                     #IPLの更新
+            self._sys.update_ipl()                     #IPLの更新
         
         ################################ タイトル関連の変数を初期化 ###################################################################
         if self.game_status == SCENE_TITLE_INIT:  #ゲームステータスが「SCENE_TITLE_INIT」の場合タイトル関連の変数を初期化する関数を呼び出す
-            self.update_title_init()              #タイトル関連の変数の初期化関数を呼び出す
+            self._sys.update_title_init()              #タイトル関連の変数の初期化関数を呼び出す
         
         ################################ タイトル ###################################################################
         if self.game_status == SCENE_TITLE:       #ゲームステータスが「SCENE_TITLE」の場合タイトルの更新を行う
-            self.update_title()                   #タイトルの更新
-            self.update_append_star()             #背景の星の追加＆発生育成関数呼び出し
-            self.update_star()                    #背景の星の更新（移動）関数呼び出し
+            self._sys.update_title()                   #タイトルの更新
+            self._sys.update_append_star()             #背景の星の追加＆発生育成関数呼び出し
+            self._sys.update_star()                    #背景の星の更新（移動）関数呼び出し
         
         ################################ タイトルでメニュー選択中 ###################################################################
         if self.game_status == SCENE_TITLE_MENU_SELECT:
-            self.update_title_menu_select()       #タイトルでのメニュー選択処理をする関数の呼び出し
-            self.update_append_star()             #背景の星の追加＆発生育成関数呼び出し
-            self.update_star()                    #背景の星の更新（移動）関数呼び出し
-            self.update_window()                  #ウィンドウの更新（ウィンドウの開き閉じ画面外に消え去っていくとか）関数を呼び出し
-            self.update_clip_window()             #画面外にはみ出たウィンドウを消去する関数の呼び出し
-            self.update_active_window()           #現在アクティブ(最前面)になっているウィンドウのインデックス値(i)を求める関数の呼び出し
-            self.update_select_cursor()           #セレクトカーソルでメニューを選択する関数を呼び出す
+            self._sys.update_title_menu_select()       #タイトルでのメニュー選択処理をする関数の呼び出し
+            self._sys.update_append_star()             #背景の星の追加＆発生育成関数呼び出し
+            self._sys.update_star()                    #背景の星の更新（移動）関数呼び出し
+            self._sys.update_window()                  #ウィンドウの更新（ウィンドウの開き閉じ画面外に消え去っていくとか）関数を呼び出し
+            self._sys.update_clip_window()             #画面外にはみ出たウィンドウを消去する関数の呼び出し
+            self._sys.update_active_window()           #現在アクティブ(最前面)になっているウィンドウのインデックス値(i)を求める関数の呼び出し
+            self._sys.update_select_cursor()           #セレクトカーソルでメニューを選択する関数を呼び出す
         
         ############################### ロード用リプレイデータスロットの選択中 #######################################################
         if self.game_status == SCENE_SELECT_LOAD_SLOT:#「SCENE_SELECT_LOAD_SLOT」の時は
-            self.update_append_star()                 #背景の星の追加＆発生育成関数呼び出し
-            self.update_star()                        #背景の星の更新（移動）関数呼び出し
-            self.update_window()                      #ウィンドウの更新（ウィンドウの開き閉じ画面外に消え去っていくとか）関数を呼び出し
-            self.update_clip_window()                 #画面外にはみ出たウィンドウを消去する関数の呼び出し
-            self.update_active_window()               #現在アクティブ(最前面)になっているウィンドウのインデックス値(i)を求める関数の呼び出し
-            self.update_select_cursor()               #セレクトカーソルでメニューを選択する関数を呼び出す
+            self._sys.update_append_star()                 #背景の星の追加＆発生育成関数呼び出し
+            self._sys.update_star()                        #背景の星の更新（移動）関数呼び出し
+            self._sys.update_window()                      #ウィンドウの更新（ウィンドウの開き閉じ画面外に消え去っていくとか）関数を呼び出し
+            self._sys.update_clip_window()                 #画面外にはみ出たウィンドウを消去する関数の呼び出し
+            self._sys.update_active_window()               #現在アクティブ(最前面)になっているウィンドウのインデックス値(i)を求める関数の呼び出し
+            self._sys.update_select_cursor()               #セレクトカーソルでメニューを選択する関数を呼び出す
             if   self.cursor_decision_item_y == 0:      #メニューでアイテムナンバー0の「1」が押されたら
                 self.replay_slot_num = 0              #スロット番号は0   (以下はほぼ同じ処理です)
             elif self.cursor_decision_item_y == 1:
@@ -87,19 +87,19 @@ class App:
                 self.move_mode = MOVE_MANUAL             #移動モードを「手動移動」にする
                 self.replay_status = REPLAY_PLAY         #リプレイ機能の状態を「再生中」にします
                 self.replay_stage_num = 0                #リプレイデータを最初のステージから再生できるように0初期化
-                self.update_replay_data_file_load()      #リプレイデータファイルのロードを行います
+                self._sys.update_replay_data_file_load()      #リプレイデータファイルのロードを行います
                 self.active_window_id = WINDOW_ID_MAIN_MENU #メインメニューウィンドウIDを最前列でアクティブなものとする
                 self.game_status = SCENE_GAME_START_INIT #ゲームステータスを「SCENE_GAME_START_INIT」にしてゲームスタート時の初期化にする
         
         ################################ ゲームスタート時の初期化 #################################################################
         if self.game_status == SCENE_GAME_START_INIT: #ゲームステータスが「GAME_START_INIT」の場合（ゲームスタート時の状態遷移）は以下を実行する
-            self.update_game_start_init()             #ゲーム開始前の初期化    スコアやシールド値、ショットレベルやミサイルレベルなどの初期化
-            self.update_replay_data_status()          #リプレイデータ(ステータス関連)をバックアップする関数の呼び出し
+            self._sys.update_game_start_init()             #ゲーム開始前の初期化    スコアやシールド値、ショットレベルやミサイルレベルなどの初期化
+            self._sys.update_replay_data_status()          #リプレイデータ(ステータス関連)をバックアップする関数の呼び出し
             self.game_status = SCENE_STAGE_START_INIT #ゲームステータスを「STAGE_START_INIT」にする
         
         ################################ステージスタート時の初期化 #################################################################
         if self.game_status == SCENE_STAGE_START_INIT: #ゲームステータスが「GAME_START_INIT」の場合（ゲームスタート時の状態遷移）は以下を実行する
-            self.update_stage_start_init()             #ステージ開始前の初期化   自機の座標や各リストの初期化、カウンター類の初期化
+            self._sys.update_stage_start_init()             #ステージ開始前の初期化   自機の座標や各リストの初期化、カウンター類の初期化
             self.game_status = SCENE_PLAY              #ゲームステータスを「STAGE_START_INIT」にする
         
         ################################ ゲームプレイ中！！！！！！ ###############################################################
