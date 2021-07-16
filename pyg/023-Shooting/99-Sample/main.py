@@ -1,7 +1,8 @@
 from random import random
 from typing import Any, List
-
+import actor
 import pyxel
+
 
 
 enemy_list = []
