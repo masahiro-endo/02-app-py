@@ -14,6 +14,12 @@ STAR_COUNT = 100
 STAR_COLOR_HIGH = 12
 STAR_COLOR_LOW = 5
 
+
+ELM_WIDTH = 0
+ELM_HEIGHT = 1
+ELM_SPEED = 2
+
+PLAYER_INFO: Tuple[Any,Any,Any] = (8,8,2)
 PLAYER_WIDTH = 8
 PLAYER_HEIGHT = 8
 PLAYER_SPEED = 2
@@ -71,10 +77,11 @@ class Actor:
     y: int
     spd: int
 
-    def __init__(self, pos: Pos, spd: int) -> None:
-        self.x = x
-        self.y = y
-        self.spd = spd
+    def __init__(self, tpl: Tuple[Any,Any,Any]) -> None:
+        for (x, y, spd) in tpl:
+            self.x = x
+            self.y = y
+            self.spd = spd
 
     def update(self) -> None:
         self.x += self.spd
