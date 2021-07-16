@@ -1,5 +1,5 @@
 from random import random
-from typing import Any, List
+from typing import Any, List, Sized, Tuple
 
 import pyxel
 
@@ -21,11 +21,11 @@ PLAYER_SPEED = 2
 BULLET_WIDTH = 2
 BULLET_HEIGHT = 8
 BULLET_COLOR = 11
-BULLET_SPEED = 4
+BULLET_SPEED = -4
 
 ENEMY_WIDTH = 8
 ENEMY_HEIGHT = 8
-ENEMY_SPEED = 1.5
+ENEMY_SPEED = 1
 
 BLAST_START_RADIUS = 1
 BLAST_END_RADIUS = 8
@@ -35,13 +35,13 @@ BLAST_COLOR_OUT = 10
 
 
 class Background:
-    star_list: List[Any] = []
+    star_list: List[Tuple[Any,Any,Any]] = []
     
     def __init__(self):
         self.star_list = []
         for i in range(STAR_COUNT):
             self.star_list.append(
-                (random() * pyxel.width, random() * pyxel.height, random() * 1.5 + 1)
+                tuple(random() * pyxel.width, random() * pyxel.height, random() * 1.5 + 1)
             )
 
     def update(self):
@@ -56,26 +56,51 @@ class Background:
             pyxel.pset(x, y, STAR_COLOR_HIGH if speed > 1.8 else STAR_COLOR_LOW)
 
 
-class Player:
-    def __init__(self, x, y):
+
+class Pos:
+    x: int
+    y: int
+    
+class Size:
+    w: int
+    h: int
+
+
+class Actor:
+    x: int
+    y: int
+    spd: int
+
+    def __init__(self, pos: Pos, spd: int) -> None:
         self.x = x
         self.y = y
+        self.spd = spd
+
+    def update(self) -> None:
+        self.x += self.spd
+        self.y += self.spd
+
+
+class Player(Actor):
+    def __init__(self, x: int, y: int, spd: int = PLAYER_SPEED):
+        super().__init__(x,y,spd)
+        
         self.w = PLAYER_WIDTH
         self.h = PLAYER_HEIGHT
         self.alive = True
 
     def update(self):
         if pyxel.btn(pyxel.KEY_LEFT):
-            self.x -= PLAYER_SPEED
+            self.x -= self.spd
 
         if pyxel.btn(pyxel.KEY_RIGHT):
-            self.x += PLAYER_SPEED
+            self.x += self.spd
 
         if pyxel.btn(pyxel.KEY_UP):
-            self.y -= PLAYER_SPEED
+            self.y -= self.spd
 
         if pyxel.btn(pyxel.KEY_DOWN):
-            self.y += PLAYER_SPEED
+            self.y += self.spd
 
         self.x = max(self.x, 0)
         self.x = min(self.x, pyxel.width - self.w)
@@ -93,10 +118,10 @@ class Player:
         pyxel.blt(self.x, self.y, 0, 0, 0, self.w, self.h, 0)
 
 
-class Bullet:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+class Bullet(Actor):
+    def __init__(self, x: int, y: int, spd: int = BULLET_SPEED):
+        super().__init__(x,y,spd)
+
         self.w = BULLET_WIDTH
         self.h = BULLET_HEIGHT
         self.alive = True
@@ -104,7 +129,7 @@ class Bullet:
         bullet_list.append(self)
 
     def update(self):
-        self.y -= BULLET_SPEED
+        super().update()
 
         if self.y + self.h - 1 < 0:
             self.alive = False
@@ -113,10 +138,10 @@ class Bullet:
         pyxel.rect(self.x, self.y, self.w, self.h, BULLET_COLOR)
 
 
-class Enemy:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+class Enemy(Actor):
+    def __init__(self, x: int, y: int, spd: int = ENEMY_SPEED):
+        super().__init__(x,y,spd)
+ 
         self.w = ENEMY_WIDTH
         self.h = ENEMY_HEIGHT
         self.dir = 1
@@ -127,13 +152,13 @@ class Enemy:
 
     def update(self):
         if (pyxel.frame_count + self.offset) % 60 < 30:
-            self.x += ENEMY_SPEED
+            self.x += self.spd
             self.dir = 1
         else:
-            self.x -= ENEMY_SPEED
+            self.x += self.spd
             self.dir = -1
 
-        self.y += ENEMY_SPEED
+        self.y += self.spd
 
         if self.y > pyxel.height - 1:
             self.alive = False
@@ -142,7 +167,7 @@ class Enemy:
         pyxel.blt(self.x, self.y, 0, 8, 0, self.w * self.dir, self.h, 0)
 
 
-class Blast:
+class Blast(Actor):
     def __init__(self, x, y):
         self.x = x
         self.y = y
