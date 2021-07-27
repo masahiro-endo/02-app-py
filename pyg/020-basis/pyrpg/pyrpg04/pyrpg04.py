@@ -3,6 +3,8 @@ import pygame
 from pygame.locals import *
 import sys
 import os
+os.chdir(os.path.dirname(__file__))
+
 
 SCR_RECT = Rect(0, 0, 640, 480)
 ROW,COL = 15,20

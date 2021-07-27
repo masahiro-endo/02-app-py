@@ -6,6 +6,8 @@ import os
 import random
 import struct
 import sys
+os.chdir(os.path.dirname(__file__))
+
 
 SCR_RECT = Rect(0, 0, 640, 480)
 GS = 32
