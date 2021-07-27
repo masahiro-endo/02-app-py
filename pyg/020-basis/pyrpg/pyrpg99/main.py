@@ -21,32 +21,6 @@ sounds = {}  # サウンド
 
 TITLE, FIELD, TALK, COMMAND, BATTLE_INIT, BATTLE_COMMAND, BATTLE_PROCESS = range(7)
 
-def load_image(dir, file, colorkey=None):
-    file = os.path.join(dir, file)
-    try:
-        image = pygame.image.load(file)
-    except pygame.error as message:
-        print("Cannot load image:", file)
-        raise SystemExit(message)
-    image = image.convert()
-    if colorkey is not None:
-        if colorkey is -1:
-            colorkey = image.get_at((0,0))
-        image.set_colorkey(colorkey, RLEACCEL)
-    return image
-
-def split_image(image):
-    """128x128のキャラクターイメージを32x32の16枚のイメージに分割
-    分割したイメージを格納したリストを返す"""
-    imageList = []
-    for i in range(0, 128, GS):
-        for j in range(0, 128, GS):
-            surface = pygame.Surface((GS,GS))
-            surface.blit(image, (0,0), (j,i,GS,GS))
-            surface.set_colorkey(surface.get_at((0,0)), RLEACCEL)
-            surface.convert()
-            imageList.append(surface)
-    return imageList
 
 class PyRPG:
     def __init__(self):
@@ -259,7 +233,46 @@ class PyRPG:
                 else:
                     self.msgwnd.set("しかし　なにもみつからなかった。")
                     game_state = TALK
-    def talk_handler(self, event):
+    def calc_offset(self, player):
+        """オフセットを計算する"""
+        offsetx = int(player.rect.topleft[0] - SCR_RECT.width/2)
+        offsety = int(player.rect.topleft[1] - SCR_RECT.height/2)
+        return offsetx, offsety
+    def show_info(self):
+        """デバッグ情報を表示"""
+        player = self.party.member[0]  # 先頭プレイヤー
+        self.msg_engine.draw_string(self.screen, (300,10), self.map.name.upper())  # マップ名
+        self.msg_engine.draw_string(self.screen, (300,40), player.name.upper())  # プレイヤー名
+        self.msg_engine.draw_string(self.screen, (300,70), "%d_%d" % (player.x, player.y))  # プレイヤー座標
+
+
+
+class Item:
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+    @classmethod
+    def retrieve_from_api(cls, id):
+        res = requests.get(f"https://api.example.com/items/{id}")
+        data = res.json()
+        return cls(id, data["name"])
+
+
+def FunctionObject(fnc):
+    fnc()
+
+
+class Handler:
+    def __init__(self)->None:
+        pass
+    @classmethod
+    def handler(cls, event: pygame.event):
+        return cls(*args)
+
+
+class TalkHandler(Handler):
+    def handler(self, event: pygame.event)->None:
         """会話中のイベントハンドラ"""
         global game_state
         # スペースキーでメッセージウィンドウを次のページへ
@@ -267,7 +280,9 @@ class PyRPG:
         if event.type == KEYDOWN and event.key == K_SPACE:
             if not self.msgwnd.next():
                 game_state = FIELD
-    def battle_init_handler(self, event):
+
+class BattleInitHandler(Handler):
+    def handler(self, event):
         """戦闘開始のイベントハンドラ"""
         global game_state
         if event.type == KEYDOWN and event.key == K_SPACE:
@@ -312,56 +327,8 @@ class PyRPG:
                 # コマンド選択画面へ戻る
                 self.battle.cmdwnd.show()
                 game_state = BATTLE_COMMAND
-    def calc_offset(self, player):
-        """オフセットを計算する"""
-        offsetx = int(player.rect.topleft[0] - SCR_RECT.width/2)
-        offsety = int(player.rect.topleft[1] - SCR_RECT.height/2)
-        return offsetx, offsety
-    def show_info(self):
-        """デバッグ情報を表示"""
-        player = self.party.member[0]  # 先頭プレイヤー
-        self.msg_engine.draw_string(self.screen, (300,10), self.map.name.upper())  # マップ名
-        self.msg_engine.draw_string(self.screen, (300,40), player.name.upper())  # プレイヤー名
-        self.msg_engine.draw_string(self.screen, (300,70), "%d_%d" % (player.x, player.y))  # プレイヤー座標
-    def load_sounds(self, dir, file):
-        """サウンドをロードしてsoundsに格納"""
-        file = os.path.join(dir, file)
-        fp = open(file, "r")
-        for line in fp:
-            line = line.rstrip()
-            data = line.split(",")
-            se_name = data[0]
-            se_file = os.path.join("se", data[1])
-            sounds[se_name] = pygame.mixer.Sound(se_file)
-        fp.close()
-    def load_charachips(self, dir, file):
-        """キャラクターチップをロードしてCharacter.imagesに格納"""
-        file = os.path.join(dir, file)
-        fp = open(file, "r")
-        for line in fp:
-            line = line.rstrip()
-            data = line.split(",")
-            chara_id = int(data[0])
-            chara_name = data[1]
-            Character.images[chara_name] = split_image(load_image("charachip", "%s.png" % chara_name))
-        fp.close()
-    def load_mapchips(self, dir, file):
-        """マップチップをロードしてMap.imagesに格納"""
-        file = os.path.join(dir, file)
-        fp = open(file, "r")
-        for line in fp:
-            line = line.rstrip()
-            data = line.split(",")
-            mapchip_id = int(data[0])
-            mapchip_name = data[1]
-            movable = int(data[2])  # 移動可能か？
-            transparent = int(data[3])  # 背景を透明にするか？
-            if transparent == 0:
-                Map.images.append(load_image("mapchip", "%s.png" % mapchip_name))
-            else:
-                Map.images.append(load_image("mapchip", "%s.png" % mapchip_name, TRANS_COLOR))
-            Map.movable_type.append(movable)
-        fp.close()
+
+
 
 
 class MessageEngine:
