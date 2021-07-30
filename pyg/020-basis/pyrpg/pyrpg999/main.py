@@ -12,7 +12,8 @@ os.chdir(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(__file__))
 import control
 import screen
-
+import UI
+import global_value as g
 
 
 
@@ -39,12 +40,11 @@ class App:
         self.surfaceScreen = pygame.display.set_mode(SCR_RECT.size, DOUBLEBUF|HWSURFACE)
         pygame.display.set_caption("PyRPG 27 戦闘画面")
 
-        global msg_engine 
-        msg_engine= MessageEngine()
+        g.msg_engine= UI.MessageEngine()
 
-        global currentScene
-        currentScene = deque()
-        currentScene.append(screen.Title(msg_engine))
+        g.currentScene = deque()
+        g.currentScene.append(screen.Demo())
+        g.currentScene.append(screen.Battle())
 
         # メインループを起動
         global game_state
@@ -57,61 +57,20 @@ class App:
         clock = pygame.time.Clock()
         while True:
             clock.tick(60)
-            for scene in currentScene:
-                scene.update()
-                scene.draw(self.screen)
+            # for scene in g.currentScene:
+            
+            scene = g.currentScene[0]
+            scene.update()
+            scene.draw(self.surfaceScreen)
                 
-                for event in pygame.event.get():
-                    scene.handler(event)
+            for event in pygame.event.get():
+                scene.handler(event)
 
             pygame.display.update()  # 画面に描画
 
 
 
-class MessageEngine:
-    FONT_WIDTH = 16
-    FONT_HEIGHT = 22
-    WHITE, RED, GREEN, BLUE = 0, 160, 320, 480
-    def __init__(self):
-        self.image = control.Method.load_image("data", "font.png", -1)
-        self.color = self.WHITE
-        self.kana2rect = {}
-        self.create_hash()
-    def set_color(self, color):
-        """文字色をセット"""
-        self.color = color
-        # 変な値だったらWHITEにする
-        if not self.color in [self.WHITE,self.RED,self.GREEN,self.BLUE]:
-            self.color = self.WHITE
-    def draw_character(self, screen, pos, ch):
-        """1文字だけ描画する"""
-        x, y = pos
-        try:
-            rect = self.kana2rect[ch]
-            screen.blit(self.image, (x,y), (rect.x+self.color,rect.y,rect.width,rect.height))
-        except KeyError:
-            print("描画できない文字があります:%s" % ch)
-            return
-    def draw_string(self, screen, pos, str):
-        """文字列を描画"""
-        x, y = pos
-        for i, ch in enumerate(str):
-            dx = x + self.FONT_WIDTH * i
-            self.draw_character(screen, (dx,y), ch)
-    def create_hash(self):
-        """文字から座標への辞書を作成"""
-        filepath = os.path.join("data", "kana2rect.dat")
-        fp = codecs.open(filepath, "r", "utf-8")
-        for line in fp.readlines():
-            line = line.rstrip()
-            d = line.split("\t")
-            kana, x, y, w, h = d[0], int(d[1]), int(d[2]), int(d[3]), int(d[4])
-            self.kana2rect[kana] = Rect(x, y, w, h)
-        fp.close()
-
-
-currentScene: deque
-msg_engine: MessageEngine
+g.currentScene: deque
 
 
 
