@@ -4,6 +4,9 @@ import random
 import codecs
 import os
 from pygame.locals import *
+import os
+os.chdir(os.path.dirname(__file__))
+
 
 
 # 色の定義
