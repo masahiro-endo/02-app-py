@@ -3,6 +3,10 @@ import pygame
 import sys
 import random
 from pygame.locals import *
+import os
+os.chdir(os.path.dirname(__file__))
+
+
 
 # 色の定義
 WHITE = (255, 255, 255)
@@ -18,9 +22,18 @@ treasure = 0 # TRE_NAMEの添字 1,2,3：宝箱、4,5:繭
 n_map = [[]]
 map_w = 0
 map_h = 0
-food = 10
+food = 10 # プレイヤーの食料（1歩ごとに1減少） 0になったら体力が1歩ごとに5減少
 floor = 1
 tmr = 0
+
+potion = 0 # ポーションを使える回数（使うと全快する）
+blazegem = 0 # blazeを使える回数
+treasure = 0 # TRE_NAMEの添字 1,2,3：宝箱、4,5:繭
+
+
+
+
+
 
 imgWall = pygame.image.load("image/wall.png")
 imgWall2 = pygame.image.load("image/wall2.png")

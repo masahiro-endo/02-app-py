@@ -5,7 +5,9 @@ from pygame.locals import *
 import os
 os.chdir(os.path.dirname(__file__))
 import chara
-import maps, move, battle
+import maps
+import move
+import battle
 
 
 

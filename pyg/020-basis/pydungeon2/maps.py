@@ -1,6 +1,6 @@
 
 
-ef get_map(num, player):
+def get_map(num, player):
     if num == 0:
         maps = [
             [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],

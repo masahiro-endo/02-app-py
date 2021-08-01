@@ -47,7 +47,278 @@ battle_order = {} # 戦闘の順番
 COMMAND = [["こうげき", "どうぐ"], ["じゅもん", "そうび"], ["ぼうぎょ", "にげる"]]
 TRE_NAME = ["Potion", "Blaze gem", "Food spoiled.", "Food +20", "Food +100"]
 
-（省略）
+party = 1 # パーティーの数
+
+
+
+
+def draw_text(bg, txt, x, y, fnt, col): # 影付き文字の表示
+    sur = fnt.render(txt, True, BLACK)
+    bg.blit(sur, [x+1, y+2])
+    sur = fnt.render(txt, True, col)
+    bg.blit(sur, [x, y])
+
+def init_battle(bg): # 戦闘に入る準備をする
+    global monster
+    num_enemy = random.randint(1, 4)
+    sum_x = 0
+    list_typ = []
+    for _ in range(num_enemy):
+        if floor >= 10:
+            typ = random.randint(1, 10)
+        else:
+            typ = random.randint(1, floor+1)
+        list_typ.append(typ)
+
+    dic_typ = collections.Counter(list_typ) # 重複を抽出
+    i = 0
+    for k, v in dic_typ.items(): # k:typ、v:数（typの種類がvの数だけ存在）
+        for j in range(v):
+            monster.append(chara.Monster(k))
+            if v != 1: # 同じ種類が複数いる時
+                monster[i].set_name(j)
+            sum_x += monster[i].img.get_width() + 35 # 35はモンスターの間隔
+            monster[i].set_y(bg.get_height()*0.6 - monster[i].img.get_height()) # どのモンスターも画面の7割が一番下に揃えられる
+            i += 1
+    sum_x -= 35 # 最後のモンスターは間隔を開ける必要がない
+    x_i_i = bg.get_width()/2 - sum_x/2 # 一番左のモンスターのx座標
+    monster[0].set_x(x_i_i) # 1匹目
+    for i in range(num_enemy-1): # 2匹目
+        x_i_i += monster[i].img.get_width() + 35 # 2匹目以降のモンスターの横幅+間隔 (2匹目は1匹目の横幅+間隔分をずらす)
+        monster[i+1].set_x(x_i_i) # 各モンスターのx座標 2匹目以降なので i+1
+
+    if len(dic_typ) == 1: # １種類はモンスター名
+        if num_enemy == 1: # １匹はそのまま表示
+            return monster[0].name
+        else: # 複数は" A"や" B"などを消す
+            return monster[0].name[:-2] # モンスターが１種類
+    else: # 複数種類
+        return "まもののむれ" # モンスターが複数種類
+
+def draw_battle(bg, fnt, obj, player): # 戦闘画面の描画 obj:戦闘で行動中のオブジェクト
+    global emy_blink, dmg_eff
+    bx = 0
+    by = 0
+    if dmg_eff > 0:
+        dmg_eff = dmg_eff - 1
+        bx = random.randint(-20, 20)
+        by = random.randint(-10, 10)
+    bg.blit(imgBtlBG, [bx, by])
+    for i, mon in enumerate(monster):
+        display_flg = False # 生存しているモンスターを表示
+        if mon.hp> 0 and btl_enemy != i:
+            display_flg = True
+        elif mon.hp> 0 and btl_enemy == i: # 攻撃対象のモンスターにエフェクト効果
+            if emy_blink%2 == 0:
+                display_flg = True
+        if display_flg:
+            if monster[i] is obj: # 行動中のモンスターなら
+                bg.blit(mon.img, [monster[i].x, monster[i].y+emy_step])
+            else:
+                bg.blit(mon.img, [monster[i].x, monster[i].y])
+            # 敵の体力を表示するバー
+            # draw_bar(bg, 340, 580, 200, 10, monster.hp, monster.maxhp)
+            x_i = monster[i].x + mon.img.get_width()/2 - 100 # 体力バーのx座標
+            x_w = 200 # 体力バーの幅
+            y_i = bg.get_height()*0.6 + 10 # モンスター表示の一番下（画面の７割）
+            y_h = 10
+            pygame.draw.rect(bg, WHITE, [x_i-2, y_i-2, x_w+4, y_h+4])
+            pygame.draw.rect(bg, BLACK, [x_i, y_i, x_w, y_h])
+            if mon.hp > 0:
+                pygame.draw.rect(bg, (0,128,255), [x_i, y_i, x_w*mon.hp/mon.maxhp, y_h]) # 残り体力
+
+    if emy_blink > 0:
+        emy_blink = emy_blink - 1
+
+    # パラメータ表示
+    x_i = int(bg.get_width()/4) # x座標の開始位置
+    x_w = int(bg.get_width()/8) # 幅
+    y_i = 20 # y座標の開始位置
+    y_h = 120 # 高さ
+    x_i_t = x_i+x_w/2-50 # テキストのx座標の開始位置
+    if party == 1: # 一人の時の全体の表示幅
+        x_w *= 1
+    col = WHITE
+    if player.hp < player.maxhp/4:
+        col = DANGER
+    elif player.hp < player.maxhp/2:
+        col = WARNING
+    pygame.draw.rect(bg, col, [x_i, y_i, x_w, y_h], 2, 5)
+    pygame.draw.line(bg, col, [x_i, y_i+33], [x_i+x_w-1, y_i+33], 2) # -1がないと少し出る
+    draw_text(bg, "{}".format(player.name), x_i_t, y_i+6, fnt, col)
+    if len(str(player.hp)) == 3:
+        draw_text(bg, mojimoji.han_to_zen("H{}".format(player.hp)), x_i_t, y_i+36, fnt, col)
+    elif len(str(player.hp)) == 2:
+        draw_text(bg, mojimoji.han_to_zen("H {}".format(player.hp)), x_i_t, y_i+36, fnt, col)
+    elif len(str(player.hp)) == 1:
+        draw_text(bg, mojimoji.han_to_zen("H  {}".format(player.hp)), x_i_t, y_i+36, fnt, col)
+
+    if len(str(player.mp)) == 3:
+        draw_text(bg, mojimoji.han_to_zen("M{}".format(player.mp)), x_i_t, y_i+66, fnt, col)
+    elif len(str(player.mp)) == 2:
+        draw_text(bg, mojimoji.han_to_zen("M {}".format(player.mp)), x_i_t, y_i+66, fnt, col)
+    elif len(str(player.mp)) == 1:
+        draw_text(bg, mojimoji.han_to_zen("M  {}".format(player.mp)), x_i_t, y_i+66, fnt, col)
+    
+    if len(str(player.lv)) == 2:
+        draw_text(bg, mojimoji.han_to_zen("L:{}".format(player.lv)), x_i_t, y_i+96, fnt, col)
+    elif len(str(player.lv)) == 1:
+        draw_text(bg, mojimoji.han_to_zen("L: {}".format(player.lv)), x_i_t, y_i+96, fnt, col)
+
+    if idx == 11 or idx == 19: # コマンド選択 or モンスター選択
+        # コマンド表示
+        x_i = 50 # x座標の開始位置
+        x_w = bg.get_width()*0.4
+        y_i = bg.get_height()*0.6 + 40
+        y_h = bg.get_height()*0.4 - 40 # 高さ
+        if len(player.name) <= 2:
+            x_i_t = x_i+x_w/2-25 # テキストのx座標の開始位置
+        else:
+            x_i_t = x_i+x_w/2-50 # テキストのx座標の開始位置
+        y_i_t = y_i + 6
+        pygame.draw.rect(bg, col, [x_i, y_i, x_w, y_h], 2, 5)
+        pygame.draw.line(bg, col, [x_i, y_i+33], [x_i+x_w-1, y_i+33], 2) # -1がないと少し出る
+        draw_text(bg, "{}".format(player.name), x_i_t, y_i_t, fnt, col)
+
+        # COMMAND = [["こうげき", "どうぐ"], 
+        # ["じゅもん", "そうび"], 
+        # ["ぼうぎょ", "にげる"]]
+        for i in range(3):
+            for j in range(2):
+                draw_text(bg, COMMAND[i][j], x_i+50+j*x_w/2, y_i+70+i*60, fnt, col)
+        if idx == 11:
+            if tmr%5 != 0:
+                draw_text(bg, "▶︎", x_i+btl_cmd_x*x_w/2, y_i+70+btl_cmd_y*60, fnt, col)
+        
+        # 敵の名前表示
+        x_i = bg.get_width()*0.4 + 60 # x座標の開始位置
+        x_w = bg.get_width()*0.6 - 100 # 100は両端の50の合計
+        y_i = bg.get_height()*0.6 + 40
+        y_h = bg.get_height()*0.1 - 10 # 高さ(敵の名前1個分の高さ：62)
+        x_i_t = x_i + 50 # テキストのx座標の開始位置
+        y_i_t = y_i + 21 # テキストのy座標の開始位置 20+21+21=62の21
+        pygame.draw.rect(bg, col, [x_i, y_i, x_w, y_h*len(monster)], 2, 5) # 枠
+        for i, mon in enumerate(monster):
+            draw_text(bg, "{}".format(mon.name), x_i_t, y_i_t+y_h*i, fnt, col) # font:20(20+21+21=62)
+        if idx == 19:
+            if tmr%5 != 0:
+                draw_text(bg, "▶︎", x_i_t-50, y_i_t+y_h*btl_enemy, fnt, col) # btl_nenmy(モンスターの名前の位置)
+
+    elif idx == 21: # 「じゅもん」選択
+        # 呪文の表示
+        x_i = 50 # x座標の開始位置
+        x_w = bg.get_width() - 100 # 幅（両端の50を引いたのが幅）
+        y_i = bg.get_height()*0.6 + 40 # 6割+40のところからメッセージ枠を出す
+        y_h = bg.get_height()*0.1 - 10 # 高さ（一個分の高さ）
+        x_i_t = x_i + 50 # テキストのx座標の開始位置
+        y_i_t = y_i + 21 # テキストのy座標の開始位置 20+21+21=62の21
+        pygame.draw.rect(bg, col, [x_i, y_i, x_w, y_h*4], 2, 5)
+        for i, spell in enumerate(player.chara1_mas_spell):
+            draw_text(bg, "{}".format(spell), x_i_t, y_i_t+y_h*i, fnt, col) # font:20(20+21+21=62)
+        if tmr%5 != 0:
+            draw_text(bg, "▶︎", x_i_t-50, y_i_t+y_h*0, fnt, col)
+    else:
+        # 戦闘メッセージ表示
+        x_i = 50 # x座標の開始位置
+        x_w = bg.get_width() - 100 # 幅（両端の50を引いたのが幅）
+        y_i = bg.get_height()*0.6 + 40 # 6割+40のところからメッセージ枠を出す
+        y_h = bg.get_height()*0.4 - 40 # 高さ
+        pygame.draw.rect(bg, col, [x_i, y_i, x_w, y_h], 2, 5)
+
+        for i in range(5): # 戦闘メッセージの表示
+            draw_text(bg, message[i], x_i+10, y_i+10+i*40, fnt, col)
+
+def spell_select(key):
+    global idx
+    ent = False
+    if key[K_UP]: # ↑キー
+        pass
+    elif key[K_DOWN]: # ↓キー
+        pass
+    elif key[K_LEFT]: # ←キー
+        pass
+    elif key[K_RIGHT]: # →キー
+        pass
+    elif key[K_SPACE] or key[K_RETURN]: # 決定
+        ent = True
+    elif key[K_b]: # キャンセル
+        idx = 11
+    return ent
+
+def battle_command(bg, key): # コマンドの入力と表示
+    global btl_cmd_x, btl_cmd_y
+    ent = False # Trueで返すと選択したコマンド(btl_cmd)を実行する
+    if key[K_UP] and btl_cmd_y > 0: # ↑キー
+        btl_cmd_y -= 1
+    elif key[K_DOWN] and btl_cmd_y < 2: # ↓キー
+        btl_cmd_y += 1
+    elif key[K_LEFT] and btl_cmd_x > 0: # ←キー
+        btl_cmd_x -= 1
+    elif key[K_RIGHT] and btl_cmd_x < 1: # →キー
+        btl_cmd_x += 1
+    elif key[K_SPACE] or key[K_RETURN]: # 決定s
+        ent = True
+    return ent
+
+def battle_select(bg, key):
+    global idx, btl_enemy
+    ent = False
+    if key[K_UP] and btl_enemy > 0: # ↑キー
+        btl_enemy -= 1
+    elif key[K_DOWN] and btl_enemy < len(monster)-1: # ↓キー
+        btl_enemy += 1
+    elif key[K_SPACE] or key[K_RETURN]: # 決定
+        ent = True
+    elif key[K_b]: # キャンセル
+        idx = 11
+    return ent
+
+def set_battle_turn(num, player): # 0:通常、1:先制攻撃、2:不意打ち
+    global battle_order
+    tmp_order = {}
+    if num == 0 or num == 1:
+        r = random.randint(66, 100)
+        tmp_order[player] = int(player.quick * r/100)
+    if num == 0 or num == 2:
+        for mon in monster:
+            r = random.randint(66, 100)
+            tmp_order[mon] = int(mon.quick * r/100)
+    # [(obj, quick), (ojb, quick), ...]のリストになる
+    battle_order = sorted(tmp_order.items(), key=lambda x:x[1], reverse=True)
+
+def get_battle_turn(player):
+    global battle_order
+    if not battle_order: # 全て消えたらプレイヤーのコマンド選択
+        return None, 11
+    # [(obj, quick), (ojb, quick), ...]のリスト、[0][0]で先頭（ターン）のobjを取得
+    turn_key = battle_order[0][0]
+    battle_order.pop(0) # 先頭を削除
+    if turn_key is player:
+        return turn_key, player.act
+    else:
+        return turn_key, 13
+
+def del_battle_turn(obj1): # ターン内に気絶したオブエクトを削除（気絶したオブジェクトが攻撃しないように）
+    for i, obj2 in enumerate(battle_order): # 行がobj2に入る, iはi行目
+        if obj1 is obj2[0]: # obj2[0]は各行の1列目（オブジェクト）２列目は素早さ
+            battle_order.pop(i) # i行目を削除
+
+# 戦闘メッセージの表示処理
+message = [""]*5
+def init_message():
+    for i in range(5):
+        message[i] = ""
+    
+def set_message(msg):
+    for i in range(5):
+        if message[i] == "":
+            message[i] = msg
+            return
+    for i in range(4): # 下が最新のメッセージ
+        message[i] = message[i+1]
+    message[4] = msg
+
+
 
 def main(screen, clock, font, fontS, player):
     global idx, tmr, floor
@@ -151,7 +422,7 @@ def main(screen, clock, font, fontS, player):
                     idx = 19
                     tmr = 0
                 if COMMAND[btl_cmd_y][btl_cmd_x] == "じゅもん":
-                    idx = 18
+                    idx = 21
                     tmr = 0
                 if COMMAND[btl_cmd_y][btl_cmd_x] == "ぼうぎょ":
                     player.act = 18 # get_battle_turnの戻り値idxを18
@@ -277,11 +548,15 @@ def main(screen, clock, font, fontS, player):
                 set_message("攻撃力："+str(player.atk))
             if tmr == 34:
                 set_message("防御力："+str(player.dfs))
+            if tmr == 38:
+                tmp_spell = player.master_spell()
+                if tmp_spell != "":
+                    set_message(tmp_spell + " を覚えた")
             if tmr == 40:
                 if player.exp >= player.lv_exp:
                     idx = 17
                     tmr = 0
-            if tmr == 50:
+            if tmr == 45:
                 idx = 22 # 戦闘終了
         
         elif idx == 18: # ぼうぎょ
@@ -298,6 +573,13 @@ def main(screen, clock, font, fontS, player):
             draw_battle(screen, fontS, turn_obj, player)
             if battle_select(screen, key) == True:
                 player.act = 12 # get_battle_turnの戻り値idxを12
+                idx = 23
+                tmr = 0
+
+        elif idx == 21: # コマンドで「じゅもん」を選択
+            draw_battle(screen, fontS, turn_obj, player)
+            if spell_select(key) == True:
+                player.act = 25 # get_battle_turnの戻り値idxを25
                 idx = 23
                 tmr = 0
 

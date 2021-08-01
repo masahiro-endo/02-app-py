@@ -30,6 +30,7 @@ chara1_quick = ws_chara.col_values(9) # I列
 chara1_atk = ws_chara.col_values(10) # J列
 chara1_dfs = ws_chara.col_values(11) # K列
 chara1_exp = ws_chara.col_values(12) # L列
+chara1_spell = ws_chara.col_values(13) # M列 ←覚える呪文
 
 mon_name = ws_mon.col_values(2) # B列
 mon_maxhp = ws_mon.col_values(4) # D列
@@ -63,6 +64,10 @@ class Brave(Chara):
         self.dfs = int(chara1_dfs[self.lv])
         self.lv_exp = int(chara1_exp[self.lv])
         self.exp = 0
+        self.chara1_mas_spell = [] # 覚えた呪文
+        if chara1_spell[self.lv] != "": # レベル1で覚える呪文があるなら
+            self.chara1_mas_spell.append(chara1_spell[self.lv])
+
         self.act = 0 # 戦闘のコマンド（行動）12:攻撃、18:防御
         self.img = [
                 pygame.image.load("image/mychr0.png"), # 上
@@ -95,6 +100,12 @@ class Brave(Chara):
         # 呪文効果とかが残っているか確認
         self.dfs = int(chara1_dfs[self.lv])
 
+    def master_spell(self):
+        if chara1_spell[self.lv] != "": # レベルアップして覚える呪文があるなら
+            self.chara1_mas_spell.append(chara1_spell[self.lv])
+            return chara1_spell[self.lv]
+        return ""
+        
 class Monster(Chara):
     def __init__(self, num):
         self.num = num

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import pyxel
+import os
+os.chdir(os.path.dirname(__file__))
 from module.stateStack import stateStack
 from module.constant.state import State
 
