@@ -43,7 +43,7 @@ class App:
         g.msg_engine= UI.MessageEngine()
 
         g.currentScene = deque()
-        g.currentScene.append(screen.Field())
+        g.currentScene.append(screen.DemoField())
 
         # メインループを起動
         global game_state
