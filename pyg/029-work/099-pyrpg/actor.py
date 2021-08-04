@@ -1,5 +1,218 @@
 
 
+import pygame
+from pygame.locals import *
+import codecs
+import os
+import random
+import struct
+import sys
+import control
+from enum import IntEnum
+import UI
+import actor
+import floor
+import const
+import global_value as g
+
+
+
+
+
+class Character(object):
+    '''
+    キャラクタの基底クラス
+    '''
+
+    def __init__(self):
+        '''
+        クラス初期化
+        '''
+        self.name = ""
+        self.level = 0
+        self.maxlife = 0
+        self.life = 0
+        self.strength = 0
+        self.defend = 0
+        self.dexterity = 0
+        self.exp = 0
+        self.gold = 0
+        self.isEscape = False
+        self.isPlayer = False
+        self.blt_w = 0
+        self.bly_h = 0
+        self.x = 0
+        self.y = 0
+        self.hasItem = False
+
+    def setDisplayPosition(self, _count: int, _idx: int) -> None:
+        '''
+        敵キャラクターの表示位置を算出して設定する。\n
+        引数として、敵パーティーのメンバー総数と、対象キャラクターのインデックスを指定する。
+        '''
+        if _count < 12:
+            _x_step = (104 - self.blt_w) / (_count + 1)
+            self.x = 132 + ((_idx + 1) * _x_step)
+        else:
+            if _idx < 12:
+                _x_step = (104 - self.blt_w) / 11
+                self.x = 132 + ((_idx + 1) * _x_step)
+            else:
+                _x_step = (104 - self.blt_w) / ((_count - 12) + 1)
+                self.x = 132 + (((_idx - 12) + 1) * _x_step)
+        if isinstance(self, Monster) and self.blt_h == 32:
+            self.y = 98
+        else:
+            self.y = random.randint(100, (128 - self.blt_h)) if _count < 12 else (
+                random.randint(100, (128 - self.blt_h)) if _idx < 12 else random.randint(110, (132 - self.blt_h)))
+
+
+
+
+class Party(object):
+    '''
+    パーティーを管理するクラス
+
+    Characterクラスの派生クラスを格納したListを管理する
+    リストに登録するCharacterの上限はない
+    このクラスを直接使用せず、派生クラスのplayerParty、enemyPartyを使用すること
+    '''
+
+    # パーティーメンバーのリスト
+    memberList = []
+
+    def __init__(self):
+        '''
+        クラス初期化
+        '''
+        # パーティーメンバーのリスト
+        self.memberList = []
+
+    def addMember(self, chr: Character) -> None:
+        '''
+        パーティーメンバー追加
+        '''
+        self.memberList.append(chr)
+
+    def removeMember(self, idx: int) -> None:
+        '''
+        パーティーメンバー削除
+
+        削除したいパーティーメンバーのリストのインデックスを指定する
+        リストに存在しないインデックスを指定した場合は、Exceptionが発生する
+        '''
+        try:
+            del self.memberList[idx]
+        except:
+            raise Exception(
+                "specified a member who doesn't exist.：" + str(idx))
+
+
+class PlayerParty(Party):
+    '''
+    プレイヤーパーティーのクラス
+
+    Partyクラスを継承
+    Humanクラスを格納したListを管理する
+    リストに登録するHumanの上限は5とする
+    直接このクラスを使用せず、インスタンスを格納したplayerPartyをimportして使用すること
+    '''
+    eventFlg = [0] * 256
+
+    def __init__(self):
+        '''
+        クラス初期化
+        '''
+        super().__init__()
+
+        # 方向に対する増分
+        self.VX = (0, 1, 0, -1)
+        self.VY = (-1, 0, 1, 0)
+
+        # プレイヤーパーティーの位置と方向
+        self.x = 0
+        self.y = 0
+        self.direction = 0
+
+        # プレイヤーパーティーの直前の位置と方向
+        self.x_save = 0
+        self.y_save = 0
+        self.direction_save = 0
+
+        # 状況のフラグ
+        self.isEscaped = False
+
+        # イベントフラグ
+        self.eventFlg = [0] * 100
+
+        if __debug__:
+            print("PlayerParty : Initialized.")
+
+    def saveCondition(self) -> None:
+        '''
+        状態を保存する
+        '''
+        self.x_save = self.x
+        self.y_save = self.y
+        self.direction_save = self.direction
+        if __debug__:
+            print("PlayerParty : Condition saved. x={:02d}".format(
+                self.x_save) + ",y={:02d}".format(self.y_save) + ",direction={:01d}".format(self.direction_save))
+
+    def restoreCondition(self) -> None:
+        '''
+        状態を復元する
+        '''
+        self.x = self.x_save
+        self.y = self.y_save
+        self.direction = self.direction_save
+        if __debug__:
+            print("PlayerParty : Condition restored. x={:02d}".format(
+                self.x) + ",y={:02d}".format(self.y) + ",direction={:01d}".format(self.direction))
+
+    def turnLeft(self) -> None:
+        '''
+        左を向く
+        '''
+        # 状態を保存
+        self.saveCondition()
+        # 方向を変える
+        self.direction -= 1
+        if self.direction < const.Direction.NORTH:
+            self.direction = const.Direction.WEST
+
+    def turnRight(self) -> None:
+        '''
+        右を向く
+        '''
+        # 状態を保存
+        self.saveCondition()
+        # 方向を変える
+        self.direction += 1
+        if self.direction > const.Direction.WEST:
+            self.direction = const.Direction.NORTH
+
+    def turnBack(self) -> None:
+        '''
+        後ろを向く
+        '''
+        # 状態を保存
+        self.saveCondition()
+        # 方向を変える
+        self.direction = (self.direction + 2) % 4
+
+    def moveForward(self) -> None:
+        '''
+        前に進む
+        '''
+        # 状態を保存
+        self.saveCondition()
+        # 座標を変更
+        self.x = self.x + self.VX[self.direction]
+        self.y = self.y + self.VY[self.direction]
+
+
+g.playerParty: PlayerParty
 
 
 
@@ -7,8 +220,7 @@
 
 
 
-
-class Character:
+class CCharacter:
     """一般キャラクタークラス"""
     speed = 4  # 1フレームの移動ピクセル数
     animcycle = 24  # アニメーション速度

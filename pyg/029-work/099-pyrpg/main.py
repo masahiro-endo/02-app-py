@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(__file__))
 import control
 import screen
 import UI
+import actor
 import global_value as g
 
 
@@ -39,6 +40,8 @@ class App:
         # フルスクリーン化 + Hardware Surface使用
         self.surfaceScreen = pygame.display.set_mode(SCR_RECT.size, DOUBLEBUF|HWSURFACE)
         pygame.display.set_caption("PyRPG 27 戦闘画面")
+
+        g.playerParty = actor.PlayerParty()
 
         g.msg_engine= UI.MessageEngine()
 
