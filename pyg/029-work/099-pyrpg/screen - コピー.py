@@ -25,8 +25,8 @@ class Scene:
     stateStack = None
 
     # 描画の座標オフセット
-    DRAW_OFFSET_X = 0
-    DRAW_OFFSET_Y = 0
+    DRAW_OFFSET_X = 150
+    DRAW_OFFSET_Y = 14
 
 
     def __init__(self):
@@ -135,14 +135,12 @@ class DemoField(Scene):
         self.wnd = UI.MessageWindow(Rect(140,334,360,140), g.msg_engine)
 
     def update(self):
-        super()..update()
         self.wnd.update()
     
     def draw(self, screen):
         screen.fill((128,128,128))
         self.wnd.draw(screen)  # ウィンドウの描画
         super().draw(screen)
-
         '''
         # 迷路の枠線
         pygame.draw.rect(screen, Color('darkblue'), (self.DRAW_OFFSET_X - 1, self.DRAW_OFFSET_Y - 1, 81, 81))
@@ -291,11 +289,6 @@ class DemoField(Scene):
         迷路を表示する。\n
         利用元からは、X座標、Y座標、方向、マップデータを引数に与えること。\n
         '''
-        
-        if __debug__:
-            print("draw_maze : Condition restored. x={:02d}".format(
-                _x) + ",y={:02d}".format(_y) + ",direction={:01d}".format(_direction))
-
         _data = 0
         for i in range(14):
             _get_x = _x + self.POS_X[_direction][i]
@@ -453,26 +446,18 @@ class DemoField(Scene):
         if _idx == 11:
             if _data & 0b000000000111 != 0:
                 _Color = _data & 0b000000000111
-                # pygame.draw.rect(screen, self.WALLColor_FRONT[_Color], 
-                #       (  0 + self.DRAW_OFFSET_X, 10 + self.DRAW_OFFSET_Y, 
-                #         10, 59 ), 5)
-                pygame.draw.polygone(screen, self.WALLColor_SIDE[_Color], 
-                         [ (  0 + self.DRAW_OFFSET_X,   0 + self.DRAW_OFFSET_Y ),
-                           ( 50 + self.DRAW_OFFSET_X,  50 + self.DRAW_OFFSET_Y ), 
-                           ( 50 + self.DRAW_OFFSET_X, 550 + self.DRAW_OFFSET_Y ), 
-                           (  0 + self.DRAW_OFFSET_X, 550 + self.DRAW_OFFSET_Y ) ])
+                _y = 0 if (self.isOuter() and _Color == 3) else 10
+                _h = 69 if (self.isOuter() and _Color == 3) else 59
+                pygame.draw.rect(screen, self.WALLColor_FRONT[_Color], 
+                      (  0 + self.DRAW_OFFSET_X, 10 + self.DRAW_OFFSET_Y, 
+                        10, 59 ), 5)
 
         if _idx == 12:
             if _data & 0b000000000111 != 0:
                 _Color = _data & 0b000000000111
-                # pygame.draw.rect(screen, self.WALLColor_FRONT[_Color], 
-                #       ( 69 + self.DRAW_OFFSET_X, 10 + self.DRAW_OFFSET_Y, 
-                #         10, 59 ), 5)
-                pygame.draw.polygone(screen, self.WALLColor_SIDE[_Color], 
-                         [ ( 550 + self.DRAW_OFFSET_X,  50 + self.DRAW_OFFSET_Y ),
-                           ( 600 + self.DRAW_OFFSET_X,   0 + self.DRAW_OFFSET_Y ), 
-                           ( 600 + self.DRAW_OFFSET_X, 600 + self.DRAW_OFFSET_Y ), 
-                           ( 550 + self.DRAW_OFFSET_X, 550 + self.DRAW_OFFSET_Y ) ])
+                pygame.draw.rect(screen, self.WALLColor_FRONT[_Color], 
+                      ( 69 + self.DRAW_OFFSET_X, 10 + self.DRAW_OFFSET_Y, 
+                        10, 59 ), 5)
 
         if _idx == 13:
             if _data & 0b000000000111 != 0:

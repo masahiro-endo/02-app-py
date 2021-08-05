@@ -1,249 +1,246 @@
 import pygame
-from pygame.locals import *
-import math
-import sys
-import pygame.mixer
+import random
+import os
+os.chdir(os.path.dirname(__file__))
 
-# 画面サイズを設定
-SCREEN = Rect(0, 0, 540, 540)
+# Import pygame.locals for easier access to key coordinates
+# Updated to conform to flake8 and black standards
+# 
+from pygame.locals import (
+    K_UP,
+    K_DOWN,
+    K_LEFT,
+    K_RIGHT,
+    K_ESCAPE,
+    KEYDOWN,
+    QUIT,
+)
 
-# 跳ね返しバーのクラス
-class HanekaeshiBar(pygame.sprite.Sprite):
-    # コンストラクタ（初期化メソッド）
-    def __init__(self, filename):
-        pygame.sprite.Sprite.__init__(self, self.containers)
-        self.image = pygame.image.load(filename).convert()
-        self.rect = self.image.get_rect()
-        self.rect.bottom = SCREEN.bottom - 20  # パドルのy座標
+# Define constants for the screen width and height
+# 
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 480
 
+
+class Player(pygame.sprite.Sprite):
+
+    def __init__(self):
+        super(Player, self).__init__()
+        self.surf = pygame.image.load("jet.png").convert()
+        self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
+        self.rect = self.surf.get_rect()
+
+    # Move the sprite based on keypresses
+    # 
+    def update(self, pressed_keys):
+        if pressed_keys[K_UP]:
+            self.rect.move_ip(0, -5)
+            # move_up_sound.play()
+        
+        if pressed_keys[K_DOWN]:
+            self.rect.move_ip(0, 5)
+            # move_down_sound.play()
+    
+        if pressed_keys[K_LEFT]:
+            self.rect.move_ip(-5, 0)
+    
+        if pressed_keys[K_RIGHT]:
+            self.rect.move_ip(5, 0)
+
+        # Keep player on the screen
+        # 
+        if self.rect.left < 0:
+            self.rect.left = 0
+        
+        if self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+        
+        if self.rect.top <= 0:
+            self.rect.top = 0
+        
+        if self.rect.bottom >= SCREEN_HEIGHT:
+            self.rect.bottom = SCREEN_HEIGHT
+
+
+# Define the enemy object by extending pygame.sprite.Sprite
+# Instead of a surface, use an image for a better-looking sprite
+# 
+class Enemy(pygame.sprite.Sprite):
+
+    def __init__(self):
+        super(Enemy, self).__init__()
+        self.surf = pygame.image.load("missile.png").convert()
+        self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
+        # The starting position is randomly generated, as is the speed
+        # 
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
+                random.randint(0, SCREEN_HEIGHT),
+            )
+        )
+        self.speed = random.randint(5, 20)
+
+    # Move the sprite based on speed
+    # Remove the sprite when it passes the left edge of the screen
+    # 
     def update(self):
-        # マウスのx座標を跳ね返しバーのx座標に設定
-        self.rect.centerx = pygame.mouse.get_pos()[0]
-        # ゲーム画面内のみで移動に限定
-        self.rect.clamp_ip(SCREEN)
+        self.rect.move_ip(-self.speed, 0)
+        if self.rect.right < 0:
+            self.kill()
 
-# ボールのクラス
-class Ball(pygame.sprite.Sprite):
-    # コンストラクタ（初期化メソッド）
-    def __init__(self, filename, hanekaeshiBar, blocks, score, speed, angle_left, angle_right):
-        pygame.sprite.Sprite.__init__(self, self.containers)
-        self.image = pygame.image.load(filename).convert()
-        self.rect = self.image.get_rect()
-        # ボールの速度
-        self.dx = self.dy = 0
-        # 跳ね返しバーへの参照
-        self.hanekaeshiBar = hanekaeshiBar
-        # ブロックグループへの参照
-        self.blocks = blocks
-        # ゲーム開始状態に更新
-        self.update = self.start
-        self.score = score
-        # 連続でブロックを壊した回数
-        self.hit = 0
-        # ボールの初期速度
-        self.speed = speed
-        # 跳ね返しバーの反射方向(左端:135度）
-        self.angle_left = angle_left
-        # 跳ね返しバーの反射方向(右端:45度）
-        self.angle_right = angle_right
 
-    # ゲーム開始状態
-    # 　マウスを左クリックでボールが発射される
-    def start(self):
-        # ボールの初期位置
-        # 　跳ね返しバーの上、センタリング
-        self.rect.centerx = self.hanekaeshiBar.rect.centerx
-        self.rect.bottom = self.hanekaeshiBar.rect.top
+# Define the cloud object by extending pygame.sprite.Sprite
+# Use an image for a better-looking sprite
+# 
+class Cloud(pygame.sprite.Sprite):
 
-        # 左クリックでボール発射
-        if pygame.mouse.get_pressed()[0] == 1:
-            self.dx = 0
-            self.dy = -self.speed
-            self.update = self.move
+    def __init__(self):
+        super(Cloud, self).__init__()
+        self.surf = pygame.image.load("cloud.png").convert()
+        self.surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
+        # The starting position is randomly generated
+        #
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
+                random.randint(0, SCREEN_HEIGHT),
+            ) )
 
-    # ボールの動き
-    def move(self):
-        self.rect.centerx += self.dx
-        self.rect.centery += self.dy
+    # Move the cloud based on a constant speed
+    # Remove the cloud when it passes the left edge of the screen
+    #
+    def update(self):
+        self.rect.move_ip(-5, 0)
+        if self.rect.right < 0:
+            self.kill()
 
-        # 壁に対して反射させる
-        #   左側に衝突時
-        if self.rect.left < SCREEN.left:
-            self.rect.left = SCREEN.left
-            # 速度を反転
-            self.dx = -self.dx
-        # 壁に対して反射させる
-        #   右側に衝突時
-        if self.rect.right > SCREEN.right:
-            self.rect.right = SCREEN.right
-            self.dx = -self.dx
-        # 壁に対して反射させる
-        #   上側に衝突時
-        if self.rect.top < SCREEN.top:
-            self.rect.top = SCREEN.top
-            self.dy = -self.dy
 
-        # 跳ね返りバーとの反射
-        # 　左端:135度方向, 右端:45度方向, それ以外:線形補間をする
-        #   2つのspriteが接触しているかどうかの判定
-        if self.rect.colliderect(self.hanekaeshiBar.rect) and self.dy > 0:
-            # 連続ヒットを0に戻す
-            self.hit = 0
-            (x1, y1) = (self.hanekaeshiBar.rect.left - self.rect.width, self.angle_left)
-            (x2, y2) = (self.hanekaeshiBar.rect.right, self.angle_right)
-            # ボールが当たった位置
-            x = self.rect.left
-            # 線形補間する
-            y = (float(y2 - y1) / (x2 - x1)) * (x - x1) + y1
-            # 反射角度
-            angle = math.radians(y)
-            self.dx = self.speed * math.cos(angle)
-            self.dy = -self.speed * math.sin(angle)
-            # 反射音
-            self.hanekaeshiBar_sound.play()
+# Setup for sounds. Defaults are good.
+# pygame.mixer.init()
 
-        # ボールを落とした場合
-        if self.rect.top > SCREEN.bottom:
-            # ボールを初期状態に戻す
-            self.update = self.start
-            self.gameover_sound.play()
-            self.hit = 0
-            # スコア減点-100点
-            self.score.add_score(-100)
+# Initialize pygame
+pygame.init()
 
-        # ボールと衝突したブロックリストを取得
-        #   Groupが格納しているSprite中から、指定したSpriteと接触しているものを探索
-        blocks_collided = pygame.sprite.spritecollide(self, self.blocks, True)
-        # 衝突ブロックがある場合
-        if blocks_collided:
-            oldrect = self.rect
-            for block in blocks_collided:
-                # ボールが左からブロックへ衝突した場合
-                if oldrect.left < block.rect.left and oldrect.right < block.rect.right:
-                    self.rect.right = block.rect.left
-                    self.dx = -self.dx
 
-                # ボールが右からブロックへ衝突した場合
-                if block.rect.left < oldrect.left and block.rect.right < oldrect.right:
-                    self.rect.left = block.rect.right
-                    # x軸方向へ増加量を反転
-                    self.dx = -self.dx
+# Load and play background music
+# Sound source: http://ccmixter.org/files/Apoxode/59262
+# License: https://creativecommons.org/licenses/by/3.0/
+# 
+# pygame.mixer.music.load("Apoxode_-_Electric_1.mp3")
+# pygame.mixer.music.play(loops=-1)
 
-                # ボールが上からブロックへ衝突した場合
-                if oldrect.top < block.rect.top and oldrect.bottom < block.rect.bottom:
-                    self.rect.bottom = block.rect.top
-                    # ｙ軸方向へ増加量を反転
-                    self.dy = -self.dy
+# Load all sound files
+# Sound sources: Jon Fincher
+# move_up_sound = pygame.mixer.Sound("Rising_putter.ogg")
+# move_down_sound = pygame.mixer.Sound("Falling_putter.ogg")
+# collision_sound = pygame.mixer.Sound("Collision.ogg")
 
-                # ボールが下からブロックへ衝突した場合
-                if block.rect.top < oldrect.top and block.rect.bottom < oldrect.bottom:
-                    self.rect.top = block.rect.bottom
-                    # ｙ軸方向へ増加量を反転
-                    self.dy = -self.dy
-                # 効果音を鳴らす
-                self.block_sound.play()
-                # 衝突回数カウント
-                self.hit += 1
-                # 衝突回数に応じてスコア加算
-                self.score.add_score(self.hit * 10)
 
-# ブロックのクラス
-class Block(pygame.sprite.Sprite):
-    def __init__(self, filename, x, y):
-        pygame.sprite.Sprite.__init__(self, self.containers)
-        self.image = pygame.image.load(filename).convert()
-        self.rect = self.image.get_rect()
-        # ブロックの左上座標
-        self.rect.left = SCREEN.left + x * self.rect.width
-        self.rect.top = SCREEN.top + y * self.rect.height
+# Setup the clock for a decent framerate
+clock = pygame.time.Clock()
 
-# スコアのクラス
-class Score():
-    def __init__(self, x, y):
-        self.sysfont = pygame.font.SysFont(None, 20)
-        self.score = 0
-        (self.x, self.y) = (x, y)
+# Create the screen object
+# The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
+# 
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    def draw(self, screen):
-        img = self.sysfont.render("SCORE:" + str(self.score), True, (255, 255, 250))
-        screen.blit(img, (self.x, self.y))
+# Create custom events for adding a new enemy and a cloud
+ADDENEMY = pygame.USEREVENT + 1
+pygame.time.set_timer(ADDENEMY, 250)
+ADDCLOUD = pygame.USEREVENT + 2
+pygame.time.set_timer(ADDCLOUD, 1000)
 
-    def add_score(self, x):
-        self.score += x
 
-# メイン　ここからスタート
-def main():
-    # 初期化
-    pygame.init()
-    # スクリーン設定
-    screen = pygame.display.set_mode(SCREEN.size)
-    # サウンド設定1
-    #   パドルにボールが衝突した時の効果音取得
-    Ball.hanekaeshiBar_sound = pygame.mixer.Sound("/Users/.../省略/.../songs/catch.wav")
-    # サウンド設定2
-    #   ブロックにボールが衝突した時の効果音取得
-    Ball.block_sound = pygame.mixer.Sound("/Users/.../省略/.../songs/bang.wav")
-    # サウンド設定3
-    #   ゲームオーバー時の効果音取
-    Ball.gameover_sound=pygame.mixer.Sound("/Users/.../省略/.../songs/falling.wav")  
-    # 描画用のスプライトグループ
-    gp = pygame.sprite.RenderUpdates()
+# Create groups to hold enemy sprites and all sprites
+# - enemies is used for collision detection and position updates
+# - all_sprites is used for rendering
+enemies = pygame.sprite.Group()
+clouds = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
 
-    # 衝突判定用のスプライトグループ
-    blocks = pygame.sprite.Group()
+player = Player()
+all_sprites.add(player)
 
-    # スプライトグループに追加
-    HanekaeshiBar.containers = gp
-    Ball.containers = gp
-    Block.containers = gp, blocks
 
-    # パドルの作成
-    hanekaeshiBar = HanekaeshiBar("/Users/.../省略/.../pngs/haneBar.png")
 
-    # ブロックの作成(20*20)
-    for x in range(1, 20):
-        for y in range(1, 21):
-            # 中間のブロックを抜いておく
-            if y < 8 or 14 < y:
-                Block("/Users/.../省略/.../pngs/block.png", x, y)
+# Variable to keep the main loop running
+running: bool = True
 
-    # スコアを画面(10, 10)に表示
-    score = Score(10, 10)
+# Main loop
+while running:
+    # Look at every event in the queue
+    for event in pygame.event.get():
+        # Did the user hit a key?
+        if event.type == KEYDOWN:
+            # Was it the Escape key? If so, then stop the loop.
+            if event.key == K_ESCAPE:
+                running = False
 
-    # ボールを作成
-    Ball("/Users/.../省略/.../pngs/ball.png",
-         hanekaeshiBar, blocks, score, 5, 135, 45)
+        # Did the user click the window close button? If so, stop the loop.
+        elif event.type == QUIT:
+            running = False
 
-    clock = pygame.time.Clock()
+        # Add a new enemy?
+        elif event.type == ADDENEMY:
+            # Create the new enemy and add it to sprite groups
+            new_enemy = Enemy()
+            enemies.add(new_enemy)
+            all_sprites.add(new_enemy)
 
-    while (1):
-        # フレームレート(60fps)
-        clock.tick(60)
-        screen.fill((0, 20, 0))
-        # 全てのスプライトグループを更新
-        gp.update()
-        # 全てのスプライトグループを描画
-        gp.draw(screen)
-        # スコアを描画
-        score.draw(screen)
-        # 画面更新
-        pygame.display.update()
+        # Add a new cloud?
+        elif event.type == ADDCLOUD:
+            # Create the new cloud and add it to sprite groups
+            new_cloud = Cloud()
+            clouds.add(new_cloud)
+            all_sprites.add(new_cloud)
 
-        # キーイベント（終了）
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == KEYDOWN and event.key == K_ESCAPE:
-                pygame.quit()
-                sys.exit()
+    # Get the set of keys pressed and check for user input
+    pressed_keys = pygame.key.get_pressed()
+    player.update(pressed_keys)
 
-# これはPythonの特殊な書き方ですが頻繁に出てきます。
-# スクリプトをpythonコマンドで実行したりダブルクリックで実行すると
-# __name__に__main__という文字列が代入されます。
-# if文がTrueになり、main()が自動的に始まります。
-if __name__ == "__main__":
-    main()
+    # Update the position of enemies and clouds
+    enemies.update()
+    clouds.update()
+
+    # Fill the screen with sky blue
+    # screen.fill((135, 206, 250))
+    screen.fill((255, 255, 255))
+
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
+
+    # Check if any enemies have collided with the player
+    if pygame.sprite.spritecollideany(player, enemies):
+        # If so, then remove the player
+        player.kill()
+
+        # Stop any moving sounds and play the collision sound
+        # move_up_sound.stop()
+        # move_down_sound.stop()
+        # collision_sound.play()
+
+        # Stop the loop
+        running = False
+
+    # Flip everything to the display
+    pygame.display.flip()
+
+    # Ensure program maintains a rate of 30 frames per second
+    clock.tick(30)
+
+
+
+
+
+# All done! Stop and quit the mixer.
+# pygame.mixer.music.stop()
+# pygame.mixer.quit()
+
+
+
+
+
 
 
 

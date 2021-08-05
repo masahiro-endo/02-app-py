@@ -14,11 +14,12 @@ import control
 import screen
 import UI
 import actor
+import const
 import global_value as g
 
 
 
-SCR_RECT = Rect(0, 0, 640, 480)
+SCR_RECT = Rect(0, 0, 800, 600)
 GS = 32
 DOWN,LEFT,RIGHT,UP = 0,1,2,3
 STOP, MOVE = 0, 1  # 移動タイプ
@@ -42,6 +43,10 @@ class App:
         pygame.display.set_caption("PyRPG 27 戦闘画面")
 
         g.playerParty = actor.PlayerParty()
+        g.playerParty.x = 17
+        g.playerParty.y = 4
+        g.playerParty.direction = const.Direction.SOUTH
+        g.playerParty.saveCondition()
 
         g.msg_engine= UI.MessageEngine()
 
