@@ -43,9 +43,9 @@ class App:
         pygame.display.set_caption("PyRPG 27 戦闘画面")
 
         g.playerParty = actor.PlayerParty()
-        g.playerParty.x = 17
-        g.playerParty.y = 4
-        g.playerParty.direction = const.Direction.SOUTH
+        g.playerParty.x = 5
+        g.playerParty.y = 5
+        g.playerParty.direction = const.Direction.NORTH
         g.playerParty.saveCondition()
 
         g.msg_engine= UI.MessageEngine()
