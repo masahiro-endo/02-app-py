@@ -1,5 +1,7 @@
 
 
+from collections import deque
+from typing import List
 import pygame
 from pygame.locals import *
 import codecs
@@ -11,8 +13,9 @@ import control
 from enum import IntEnum
 import UI
 import actor
-import floor
+import field
 import const
+import math
 import global_value as g
 
 
@@ -54,21 +57,63 @@ class Scene:
         # タイマーカウンタ初期化
         self.tick = 0
 
+    def onExit(self):
+        pass
 
-class Demo(Scene):
 
-    wnd: UI.Window
+
+
+class CombatAction:
+
+    _msg: str
+    _snd: pygame.mixer.Sound
+    
+    def __init__(self):
+        self._msg = "１１１のダメージ"
+    
+class PlayerDicide(CombatAction):
+    def __init__(self):
+        super().__init__()
+        self._snd = pygame.mixer.Sound("./assets/sounds/" + "ステータス治療1.mp3")
+
+class AIDicide(CombatAction):
+    def __init__(self):
+        super().__init__()
+        self._snd = pygame.mixer.Sound("./assets/sounds/" + "剣の素振り2.mp3")
+
+
+
+
+class CombatBattle(Scene):
+
+    _action: deque = deque()
+    _wnd: UI.Window
+    _img: pygame.image
 
     def __init__(self):
-        global msg_engine
-        self.wnd = UI.MessageWindow(Rect(140,334,360,140), g.msg_engine)
+        self._wnd = UI.MessageWindow(Rect(140,334,360,140), g.msg_engine)
+        self._wnd.show()
+        self._wnd.set(u"ＥＮＣＯＵＮＴＥＲ！")
+
+        self._img = control.Method.load_image("./assets/images/npc/", "pngegg(32).png", -1)
+        self._img = pygame.transform.scale(self._img, (200, 200))
+        
+        self._action.appendleft(PlayerDicide())
+        self._action.appendleft(AIDicide())
 
     def update(self):
-        self.wnd.update()
-    
+        super().update()
+        if len(self._action) > 0:
+            self._wnd.set(self._action[0]._msg)
+            if not self._action[0]._snd is None:
+                self._action[0]._snd.play()
+                self._action[0]._snd = None
+        self._wnd.update()
+                    
     def draw(self, screen):
-        screen.fill((128,128,128))
-        self.wnd.draw(screen)  # ウィンドウの描画
+        super().draw(screen)
+        self._wnd.draw(screen)
+        screen.blit(self._img, (200, 100))
 
     def handler(self, event):
         super().handler(event)
@@ -76,21 +121,11 @@ class Demo(Scene):
         if event.type == KEYDOWN:
 
             if event.key == K_SPACE:
-
-                if self.wnd.is_visible:  # ウィンドウ表示中
-                    self.wnd.next()
-                else:
-                    self.wnd.show()  # ウィンドウを表示
-                    self.wnd.set(u"そのほうこうには　だれもいない。")
-                if __debug__:
-                    print("wnd.visible=" + str(self.wnd.is_visible))
+                g.currentScene.popleft()
 
             if event.key == K_RETURN:
-                global msg_engine
-                global currentScene
-                currentScene.pop()
-                currentScene.append(screen.Title(msg_engine))
-
+                if len(self._action) > 0:
+                    self._action.popleft()
 
 
 class DemoField(Scene):
@@ -133,20 +168,19 @@ class DemoField(Scene):
     ]
 
 
-    wnd: UI.Window
-    _map = floor.demotown.map
+    _wnd: UI.Window
+    _map = field.demotown.floormap
 
     def __init__(self):
-        global msg_engine
-        self.wnd = UI.MessageWindow(Rect(140,334,360,140), g.msg_engine)
+        self._wnd = UI.MessageWindow(Rect(140,334,360,140), g.msg_engine)
 
     def update(self):
         super().update()
-        self.wnd.update()
-    
+        self._wnd.update()
+                  
     def draw(self, screen):
-        screen.fill((128,128,128))
-        self.wnd.draw(screen)  # ウィンドウの描画
+        screen.fill((0,0,0))
+        self._wnd.draw(screen)  # ウィンドウの描画
         super().draw(screen)
         lnw = 1
 
@@ -161,8 +195,8 @@ class DemoField(Scene):
                       (   0 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y), 
                       ( 600 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y), lnw )
             pygame.draw.line(screen, Color('darkblue'), 
-                      (   0 + self.DRAW_OFFSET_X, 450 + self.DRAW_OFFSET_Y), 
-                      ( 600 + self.DRAW_OFFSET_X, 450 + self.DRAW_OFFSET_Y), lnw )
+                      (   0 + self.DRAW_OFFSET_X, 425 + self.DRAW_OFFSET_Y), 
+                      ( 600 + self.DRAW_OFFSET_X, 425 + self.DRAW_OFFSET_Y), lnw )
             pygame.draw.line(screen, Color('darkblue'), 
                       (   0 + self.DRAW_OFFSET_X, 550 + self.DRAW_OFFSET_Y), 
                       ( 600 + self.DRAW_OFFSET_X, 550 + self.DRAW_OFFSET_Y), lnw )
@@ -184,12 +218,12 @@ class DemoField(Scene):
                           (   0 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y), 
                           ( 600 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y), lnw )
                 pygame.draw.line(screen, Color('darkblue'), 
-                          (   0 + self.DRAW_OFFSET_X, 150 + self.DRAW_OFFSET_Y), 
-                          ( 600 + self.DRAW_OFFSET_X, 150 + self.DRAW_OFFSET_Y), lnw )
+                          (   0 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y), 
+                          ( 600 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y), lnw )
                 pygame.draw.line(screen, Color('darkblue'), 
                           (   0 + self.DRAW_OFFSET_X,  50 + self.DRAW_OFFSET_Y), 
                           ( 600 + self.DRAW_OFFSET_X,  50 + self.DRAW_OFFSET_Y), lnw )
-            
+                
                 pygame.draw.line(screen, Color('darkblue'), 
                           ( 250 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y), 
                           (   0 + self.DRAW_OFFSET_X,   0 + self.DRAW_OFFSET_Y), lnw )
@@ -202,8 +236,8 @@ class DemoField(Scene):
             self.draw_maze(screen, g.playerParty.x, g.playerParty.y,
                           g.playerParty.direction, self._map)
 
-            self.draw_minimap(screen, g.playerParty.x, g.playerParty.y,
-                          g.playerParty.direction, self._map)
+            # self.draw_minimap(screen, g.playerParty.x, g.playerParty.y,
+            #               g.playerParty.direction, self._map)
 
     def handler(self, event):
         super().handler(event)
@@ -212,19 +246,17 @@ class DemoField(Scene):
 
             if event.key == K_SPACE:
 
-                if self.wnd.is_visible:  # ウィンドウ表示中
-                    self.wnd.next()
+                if self._wnd.is_visible:  # ウィンドウ表示中
+                    self._wnd.next()
                 else:
-                    self.wnd.show()  # ウィンドウを表示
-                    self.wnd.set(u"そのほうこうには　だれもいない。")
-                if __debug__:
-                    print("wnd.visible=" + str(self.wnd.is_visible))
+                    self._wnd.show()  # ウィンドウを表示
+                    self._wnd.set(u"そのほうこうには　だれもいない。")
 
             if event.key == K_RETURN:
                 global msg_engine
                 global currentScene
-                currentScene.pop()
-                currentScene.append(screen.Title(msg_engine))
+                g.currentScene.pop()
+                g.currentScene.append(screen.Title(g.msg_engine))
 
             # キャンプ
             #if pyxel.btnp(pyxel.KEY_SPACE):
@@ -253,10 +285,20 @@ class DemoField(Scene):
                 if self.can_move_forward(self._map, g.playerParty.x, g.playerParty.y, g.playerParty.direction):
                     self.tick = 0
                     g.playerParty.moveForward()
+                    print("g.playerParty.moveForward")
+
+                    if self.doEncounted():
+                        self.tick = 0
+                        g.currentScene.appendleft(CombatBattle())
+                        return
 
                 else:
+                    print("cntOops")
                     # pyxel.play(3, 6)
                     self.cntOops = 20
+
+                    self._wnd.show()
+                    self._wnd.set(u"ＯＯＰＳ！")
 
 
     def can_move_forward(self, _map, _x: int, _y: int, _direction: int) -> bool:
@@ -264,7 +306,8 @@ class DemoField(Scene):
         前進できるかを判定する。\n
         マップデータを方向によりシフトした結果の下位1ビットが立っている（＝目の前の壁情報が通行不可）場合は、前進不可と判定する。
         '''
-        _value = self.get_mapinfo(_map, _x, _y, _direction)
+        # _value = self.get_mapinfo(_map, _x, _y, _direction)
+        _value = _map[ _y + self.POS_Y[_direction][10] ][ _x + self.POS_X[_direction][10] ]
 
         if _value & 0b000000000001 == 0b000000000001:
             return False
@@ -285,36 +328,77 @@ class DemoField(Scene):
         '''
         return False
 
+    def doEncounted(self) -> bool:
+        '''
+        エンカウントしたかを返却する\n
+        出現確率を変更する場合は、継承先クラスでオーバーライドする。
+        '''
+        if random.randint(0, 1) == 0:
+            return True
+        else:
+            return False
+
+    def draw_isotri(self, screen, x, y, edge, angle):
+        ok = edge/2/math.sqrt(3)
+        r = math.radians(angle)         #---ラジアンに変換
+
+        x1, y1 = -edge/2, ok
+        x2, y2 = edge/2, ok
+        x3, y3 = 0, -ok*2
+
+        #---angle度回転時の座標
+        point1 = [(x1*math.cos(r)-y1*math.sin(r))+x,
+                (x1*math.sin(r)+y1*math.cos(r))+y]
+        point2 = [(x2*math.cos(r)-y2*math.sin(r))+x,
+                (x2*math.sin(r)+y2*math.cos(r))+y]
+        point3 = [(x3*math.cos(r)-y3*math.sin(r))+x,
+                (x3*math.sin(r)+y3*math.cos(r))+y]
+
+        #---描画
+        pygame.draw.polygon(screen, Color('white'), 
+                   [ ( point1[0] + self.DRAW_OFFSET_X, point1[1] +  self.DRAW_OFFSET_Y ),
+                     ( point2[0] + self.DRAW_OFFSET_X, point2[1] +  self.DRAW_OFFSET_Y ), 
+                     ( point3[0] + self.DRAW_OFFSET_X, point3[1] +  self.DRAW_OFFSET_Y ) ] )
+        pygame.draw.circle(screen, Color('blue'),(point3[0], point3[1]), 2 )
+
+    '''
     def draw_minimap(self, screen, _x, _y, _direction, _map):
 
         lnw = 0
-        _Color = pygame.Color('black')
+        _cpos = (_x ,_y)
         
         pygame.draw.rect(screen, pygame.Color('black'), 
                ( 600 + self.DRAW_OFFSET_X,  0 + self.DRAW_OFFSET_Y,
-                 200 , 100 ), lnw)
+                 200 , 200 ), lnw)
 
         for i in range(10):
-            if (_x - 5 + i) >= 0:
+            _get_x = _x - 5 + i
+            if _get_x < 0 or _get_x > len(_map) - 1:
+                pass
+            else:
                 for j in range(10):
-                    if (_y - 5 + j) >= 0:
-                        _data = _map[_y][_x]
-
-                        if __debug__:
-                            print( f"draw_minimap :" + 
-                                   f"data={ _data }" + 
-                                   f",x={ _x }" + 
-                                   f",y={ _y }" + 
-                                   f",color={ _Color }" )
+                    _get_y = _y - 5 + j
+                    if _get_y < 0 or _get_y > len(_map) - 1:
+                        pass
+                    else:
+                        _getpos = (_get_x , _get_y)
+                        _data = _map[_y - 5 + j][_x - 5 + i]
 
                         if _data & 0b000000000001 == 0b000000000001:
                             _Color = pygame.Color('black')
                         else:
-                            _Color = pygame.Color('white')
+                            _Color = pygame.Color('gray')
 
-                        pygame.draw.rect(screen, pygame.Color('black'), 
+                        pygame.draw.rect(screen, _Color, 
                              ( 600 + (i * 20) + self.DRAW_OFFSET_X,   0 + (j * 20) + self.DRAW_OFFSET_Y,
                                 20 , 20 ), lnw)
+
+                        if _cpos == _getpos:
+                            self.draw_isotri(screen, 
+                                    610 + (i * 20) + self.DRAW_OFFSET_X , 
+                                     10 + (j * 20) + self.DRAW_OFFSET_Y ,
+                                    15, 90 * _direction )
+    '''
 
 
     def draw_maze(self, screen, _x, _y, _direction, _map):
@@ -354,10 +438,13 @@ class DemoField(Scene):
         返却される値は、方向によりデータをシフトした結果となる。
         '''
         _data = _map[_y][_x]
-        if _direction > const.Direction.NORTH:
-            for _ in range(_direction):
-                _data = self.__right_3bit_rotate(_data)
+        # if _direction > const.Direction.NORTH:
+        #     for _ in range(_direction):
+        #         _data = self.__right_3bit_rotate(_data)
         return _data
+
+    def line_symmetry(self, pos, cpos):
+        return ( pos[0] + ( (cpos[0] - pos[0]) * 2 ) )
 
     def draw_wall(self, screen, _idx, _data):
         '''
@@ -376,38 +463,16 @@ class DemoField(Scene):
         #   |B|D|C|
         lnw = 0
 
-        if _idx == 0:
-            if _data & 0b000000000111 != 0:
-                _Color = _data & 0b000000000111
-                pygame.draw.rect(screen, self.WALLCOLOR_FRONT[_Color], 
-                      (  50 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y,
-                        100 , 100 ), lnw)
-                pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
-                         [ ( 150 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y ),
-                           ( 150 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y ), 
-                           ( 250 + self.DRAW_OFFSET_X, 300 + self.DRAW_OFFSET_Y ) ], lnw)
-
         if _idx == 1:
             if _data & 0b000000000111 != 0:
                 _Color = _data & 0b000000000111
                 pygame.draw.rect(screen, self.WALLCOLOR_FRONT[_Color], 
                       ( 150 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y,
                         100 , 100 ), lnw)
-                pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
-                         [ ( 250 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y ),
-                           ( 350 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y ), 
-                           ( 300 + self.DRAW_OFFSET_X, 300 + self.DRAW_OFFSET_Y ) ], lnw)
-
-        if _idx == 2:
-            if _data & 0b000000000111 != 0:
-                _Color = _data & 0b000000000111
-                pygame.draw.rect(screen, self.WALLCOLOR_FRONT[_Color], 
-                      ( 450 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y,
-                        100 , 100 ), lnw)
-                pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
-                         [ ( 450 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y ),
-                           ( 450 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y ), 
-                           ( 350 + self.DRAW_OFFSET_X, 300 + self.DRAW_OFFSET_Y ) ], lnw)
+                # pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
+                #          [ ( 250 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y ),
+                #            ( 300 + self.DRAW_OFFSET_X, 300 + self.DRAW_OFFSET_Y ), 
+                #            ( 250 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y ) ], lnw)
 
         if _idx == 3:
             if _data & 0b000000000111 != 0:
@@ -415,10 +480,10 @@ class DemoField(Scene):
                 pygame.draw.rect(screen, self.WALLCOLOR_FRONT[_Color], 
                       ( 350 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y,
                         100 , 100 ), lnw)
-                pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
-                         [ ( 350 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y ),
-                           ( 350 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y ), 
-                           ( 300 + self.DRAW_OFFSET_X, 300 + self.DRAW_OFFSET_Y ) ], lnw)
+                # pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
+                #          [ ( 350 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y ),
+                #            ( 350 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y ), 
+                #            ( 300 + self.DRAW_OFFSET_X, 300 + self.DRAW_OFFSET_Y ) ], lnw)
 
         if _idx == 4:
             if _data & 0b000000000111 != 0:
@@ -434,23 +499,23 @@ class DemoField(Scene):
                 _Color = _data & 0b000000000111
                 pygame.draw.rect(screen, self.WALLCOLOR_FRONT[_Color], 
                       (   0 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y, 
-                        150 , 250 ), lnw)
+                        175 , 250 ), lnw)
                 pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
                          [ ( 175 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y ),
                            ( 250 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y ), 
                            ( 250 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y ), 
-                           ( 175 + self.DRAW_OFFSET_X, 450 + self.DRAW_OFFSET_Y ) ], lnw)
+                           ( 175 + self.DRAW_OFFSET_X, 425 + self.DRAW_OFFSET_Y ) ], lnw)
 
         if _idx == 6:
             if _data & 0b000000000111 != 0:
                 _Color = _data & 0b000000000111
                 pygame.draw.rect(screen, self.WALLCOLOR_FRONT[_Color], 
-                      ( 450 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y, 
-                        150 , 250 ), lnw)
+                      ( 425 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y, 
+                        175 , 250 ), lnw)
                 pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
                          [ ( 350 + self.DRAW_OFFSET_X, 250 + self.DRAW_OFFSET_Y ),
-                           ( 450 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y ), 
-                           ( 450 + self.DRAW_OFFSET_X, 425 + self.DRAW_OFFSET_Y ), 
+                           ( 425 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y ), 
+                           ( 425 + self.DRAW_OFFSET_X, 425 + self.DRAW_OFFSET_Y ), 
                            ( 350 + self.DRAW_OFFSET_X, 350 + self.DRAW_OFFSET_Y ) ], lnw)
 
         if _idx == 7:
@@ -470,8 +535,8 @@ class DemoField(Scene):
                         50, 500 ), lnw)
                 pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
                          [ (  50 + self.DRAW_OFFSET_X,  50 + self.DRAW_OFFSET_Y ),
-                           ( 150 + self.DRAW_OFFSET_X, 150 + self.DRAW_OFFSET_Y ), 
-                           ( 150 + self.DRAW_OFFSET_X, 450 + self.DRAW_OFFSET_Y ), 
+                           ( 175 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y ), 
+                           ( 175 + self.DRAW_OFFSET_X, 425 + self.DRAW_OFFSET_Y ), 
                            (  50 + self.DRAW_OFFSET_X, 550 + self.DRAW_OFFSET_Y ) ], lnw)
 
         if _idx == 9:
@@ -481,10 +546,10 @@ class DemoField(Scene):
                       ( 550 + self.DRAW_OFFSET_X, 50 + self.DRAW_OFFSET_Y, 
                         50, 500 ), lnw)
                 pygame.draw.polygon(screen, self.WALLCOLOR_SIDE[_Color], 
-                         [ ( 450 + self.DRAW_OFFSET_X, 150 + self.DRAW_OFFSET_Y ),
+                         [ ( 425 + self.DRAW_OFFSET_X, 175 + self.DRAW_OFFSET_Y ),
                            ( 550 + self.DRAW_OFFSET_X,  50 + self.DRAW_OFFSET_Y ), 
                            ( 550 + self.DRAW_OFFSET_X, 550 + self.DRAW_OFFSET_Y ), 
-                           ( 450 + self.DRAW_OFFSET_X, 450 + self.DRAW_OFFSET_Y ) ], lnw)
+                           ( 425 + self.DRAW_OFFSET_X, 425 + self.DRAW_OFFSET_Y ) ], lnw)
 
         if _idx == 10:
             if _data & 0b000000000111 != 0:
@@ -523,201 +588,6 @@ class DemoField(Scene):
                 # if _data & 0b00000011 == 0b00000010:
                 #     pygame.draw.circle(screen, self.WALLCOLOR_FRONT[_Color], 
                 #        ( 17 + self.DRAW_OFFSET_X, 40 + self.DRAW_OFFSET_Y ) , 2, lnw)
-
-
-
-
-
-
-
-class Camp(Scene):
-
-    wnd: UI.Window
-
-    def __init__(self):
-        global msg_engine
-        self.wnd = UI.CommandWindow(Rect(16,16,216,160), g.msg_engine)
-
-    def update(self):
-        self.wnd.update()
-    
-    def draw(self, screen):
-        screen.fill((128,128,128))
-        self.wnd.draw(screen)  # ウィンドウの描画
-
-    def handler(self, event):
-        super().handler(event)
-
-        if event.type == KEYDOWN:
-
-            if event.key == K_SPACE:
-
-                if self.wnd.is_visible:  # ウィンドウ表示中
-                    self.wnd.handler(event)
-                else:
-                    self.wnd.show()  # ウィンドウを表示
-
-            if event.key == K_RETURN:
-                global msg_engine
-                global currentScene
-                currentScene.pop()
-                currentScene.append(screen.Title(msg_engine))
-
-
-
-
-class Title(Scene):
-
-    class SELECT(IntEnum):
-        START = 0
-        CONTINUE = 1
-        EXIT = 2
-
-    def __init__(self, msg_engine):
-        self.msg_engine = msg_engine
-        self.title_img = control.Method.load_image("data", "title.png", -1)
-        self.cursor_img = control.Method.load_image("data", "cursor2.png", -1)
-        self.menu = self.SELECT.START
-        self.play_bgm()
-    
-    def update(self):
-        pass
-    
-    def draw(self, screen):
-        screen.fill((0,0,128))
-        # タイトルの描画
-        screen.blit(self.title_img, (20,60))
-        # メニューの描画
-        self.msg_engine.draw_string(screen, (260,240), "ＳＴＡＲＴ")
-        self.msg_engine.draw_string(screen, (260,280), "ＣＯＮＴＩＮＵＥ")
-        self.msg_engine.draw_string(screen, (260,320), "ＥＸＩＴ")
-        # クレジットの描画
-        self.msg_engine.draw_string(screen, (130,400), "ＣＲＥＤＩＴ")
-        # メニューカーソルの描画
-        if self.menu == self.SELECT.START:
-            screen.blit(self.cursor_img, (240, 240))
-
-        elif self.menu == self.SELECT.CONTINUE:
-            screen.blit(self.cursor_img, (240, 280))
-
-        elif self.menu == self.SELECT.EXIT:
-            screen.blit(self.cursor_img, (240, 320))
-    
-    def play_bgm(self):
-        bgm_file = "title.mp3"
-        bgm_file = os.path.join("bgm", bgm_file)
-        pygame.mixer.music.load(bgm_file)
-        pygame.mixer.music.play(-1)
-
-
-    def handler(self, event):
-
-#        if __debug__:
-#            print("TitleHandler : Begin.")
-
-        global game_state
-        if event.type == KEYUP and event.key == K_UP:
-            self.menu -= 1 if self.menu > min(self.SELECT) else min(self.SELECT)
-
-        elif event.type == KEYDOWN and event.key == K_DOWN:
-            self.menu += 1 if self.menu < max(self.SELECT) else max(self.SELECT)
-
-        if event.type == KEYDOWN and event.key == K_SPACE:
-            sounds["pi"].play()
-            
-            if self.menu == self.SELECT.START:
-                game_state = PROLOGUE
-                self.map.create("field")  # フィールドマップへ
-            
-            elif self.menu == self.SELECT.CONTINUE:
-                pass
-            
-            elif self.menu == self.SELECT.EXIT:
-                pygame.quit()
-                sys.exit()
-
-
-
-class Prologue(Scene):
-
-    def __init__(self):
-        pass
-    
-    def update(self):
-        pass
-    
-    def draw(self, screen):
-        pass
-    
-    def handler(self, event):
-        pass
-
-
-
-
-
-class Battle(Scene):
-
-    """戦闘画面"""
-    def __init__(self, msgwnd, msg_engine):
-        self.msgwnd = msgwnd
-        self.msg_engine = msg_engine
-        # 戦闘コマンドウィンドウ
-        self.cmdwnd = BattleCommandWindow(Rect(96, 338, 136, 136), self.msg_engine)
-        # プレイヤーステータス（Playerクラスに実装した方がよい）
-        status = [["けんし　", 16, 0, 1],
-                  ["エルフ　", 15, 24, 1],
-                  ["そうりょ", 10, 8, 1],
-                  ["まどうし", 8, 12, 1]]
-        # 戦闘ステータスウィンドウ
-        self.status_wnd = []
-        self.status_wnd.append(BattleStatusWindow(Rect(90, 8, 104, 136), status[0], self.msg_engine))
-        self.status_wnd.append(BattleStatusWindow(Rect(210, 8, 104, 136), status[1], self.msg_engine))
-        self.status_wnd.append(BattleStatusWindow(Rect(330, 8, 104, 136), status[2], self.msg_engine))
-        self.status_wnd.append(BattleStatusWindow(Rect(450, 8, 104, 136), status[3], self.msg_engine))
-        self.monster_img = control.Method.load_image("data", "dragon.png", -1)
-
-    def start(self):
-        """戦闘の開始処理、モンスターの選択、配置など"""
-        self.cmdwnd.hide()
-        for bsw in self.status_wnd:
-            bsw.hide()
-        self.msgwnd.set("やまたのおろちが　あらわれた。")
-        self.play_bgm()
-
-    def update(self):
-        pass
-
-    def draw(self, screen):
-        screen.fill((0,0,0))
-        screen.blit(self.monster_img, (200, 170))
-        self.cmdwnd.draw(screen)
-        for bsw in self.status_wnd:
-            bsw.draw(screen)
-
-    def play_bgm(self):
-        bgm_file = "battle.mp3"
-        bgm_file = os.path.join("bgm", bgm_file)
-        pygame.mixer.music.load(bgm_file)
-        pygame.mixer.music.play(-1)
-
-    def handler(self, event):
-        super().handler(event)
-
-        if event.type == KEYDOWN:
-
-            if event.key == K_SPACE:
-
-                if self.wnd.is_visible:  # ウィンドウ表示中
-                    self.wnd.handler(event)
-                else:
-                    self.wnd.show()  # ウィンドウを表示
-
-            if event.key == K_RETURN:
-                global msg_engine
-                global currentScene
-                currentScene.pop()
-                currentScene.append(screen.Title(msg_engine))
 
 
 

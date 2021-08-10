@@ -11,7 +11,7 @@ import control
 from enum import IntEnum
 import UI
 import actor
-import floor
+import field
 import const
 import global_value as g
 
@@ -67,6 +67,72 @@ class Character(object):
                 random.randint(100, (128 - self.blt_h)) if _idx < 12 else random.randint(110, (132 - self.blt_h)))
 
 
+
+class Human(Character):
+    '''
+    人間のクラス\n
+    Characterクラスを継承
+    '''
+
+    def __init__(self):
+        '''
+        クラス初期化
+        '''
+        super(Human, self).__init__()
+        self.head = None
+        self.body = None
+        self.helmet = None
+        self.armor = None
+        self.shield = None
+        self.weapon = None
+        self.potion = -1
+        self.alignment = Alignment.GOOD
+
+    def levelup(self) -> None:
+        '''
+        レベルアップ処理
+        '''
+        # 増分値
+        addPoint = 10
+        # ライフの増分
+        addLife = random.randint(2, addPoint - 5)
+        addPoint = addPoint - addLife
+        # 強さの増分
+        addStrength = random.randint(1, addPoint - 3)
+        addPoint = addPoint - addStrength
+        # 防御力の増分
+        addDefend = random.randint(1, addPoint - 2)
+        addPoint = addPoint - addDefend
+        # 素早さの増分
+        addDexterity = addPoint
+
+        # パラメータ増加
+        self.level += 1
+        self.maxlife += addLife + 5
+        self.life += addLife + 5
+        self.strength += addStrength
+        self.defend += addDefend
+        self.dexterity += addDexterity
+        self.exp = 0
+
+
+
+
+
+class Monster(Character):
+    '''
+    モンスターのクラス
+
+    Characterクラスを継承
+    '''
+
+    def __init__(self):
+        '''
+        クラス初期化
+        '''
+        super().__init__()
+
+        
 
 
 class Party(object):

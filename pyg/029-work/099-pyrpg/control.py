@@ -1,5 +1,5 @@
 
-import pygame
+import pygame as pg
 from pygame.locals import *
 import codecs
 import os
@@ -16,11 +16,11 @@ class Method:
         pass
 
     @staticmethod
-    def load_image(dir, file, colorkey=None)->pygame.image:
+    def load_image(dir, file, colorkey=None)->pg.image:
         file = os.path.join(dir, file)
         try:
-            img = pygame.image.load(file)
-        except pygame.error as message:
+            img = pg.image.load(file)
+        except pg.error as message:
             print("Cannot load image:", file)
             raise SystemExit(message)
 
@@ -39,7 +39,7 @@ class Method:
         imageList = []
         for i in range(0, 128, GS):
             for j in range(0, 128, GS):
-                surface = pygame.Surface((GS,GS))
+                surface = pg.Surface((GS,GS))
                 surface.blit(image, (0,0), (j,i,GS,GS))
                 surface.set_colorkey(surface.get_at((0,0)), RLEACCEL)
                 surface.convert()
@@ -47,7 +47,7 @@ class Method:
         return imageList
 
     @staticmethod
-    def load_sounds(self, dir, file)->None:
+    def load_sounds(dir, file)->None:
         """サウンドをロードしてsoundsに格納"""
         file = os.path.join(dir, file)
         fp = open(file, "r")
@@ -56,7 +56,7 @@ class Method:
             data = line.split(",")
             se_name = data[0]
             se_file = os.path.join("se", data[1])
-            sounds[se_name] = pygame.mixer.Sound(se_file)
+            sounds[se_name] = pg.mixer.Sound(se_file)
         fp.close()
 
     @staticmethod

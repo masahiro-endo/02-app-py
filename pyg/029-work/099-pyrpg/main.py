@@ -37,6 +37,7 @@ TITLE, FIELD, TALK, COMMAND, BATTLE_INIT, BATTLE_COMMAND, BATTLE_PROCESS = range
 class App:
 
     def __init__(self):
+        pygame.mixer.init()
         pygame.init()
         # フルスクリーン化 + Hardware Surface使用
         self.surfaceScreen = pygame.display.set_mode(SCR_RECT.size, DOUBLEBUF|HWSURFACE)
@@ -51,7 +52,7 @@ class App:
         g.msg_engine= UI.MessageEngine()
 
         g.currentScene = deque()
-        g.currentScene.append(screen.DemoField())
+        g.currentScene.appendleft(screen.DemoField())
 
         # メインループを起動
         global game_state
@@ -64,16 +65,22 @@ class App:
         clock = pygame.time.Clock()
         while True:
             clock.tick(60)
-            # for scene in g.currentScene:
-            
-            scene = g.currentScene[0]
-            scene.update()
-            scene.draw(self.surfaceScreen)
+
+            for scene in reversed(g.currentScene):
+                if scene is None:
+                    continue
+                # scene = g.currentScene[0]
+                scene.update()
+                scene.draw(self.surfaceScreen)
                 
             for event in pygame.event.get():
                 scene.handler(event)
 
             pygame.display.update()  # 画面に描画
+
+
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
 
 
 
