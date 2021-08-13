@@ -11,7 +11,7 @@ os.chdir(os.path.dirname(__file__))
 
 sys.path.append(os.path.dirname(__file__))
 import control
-import screen
+import scene
 import UI
 import actor
 import const
@@ -42,6 +42,8 @@ class App:
         # フルスクリーン化 + Hardware Surface使用
         self.surfaceScreen = pygame.display.set_mode(SCR_RECT.size, DOUBLEBUF|HWSURFACE)
         pygame.display.set_caption("PyRPG 27 戦闘画面")
+        g.jpfont12 = pygame.font.Font('./assets/fonts/姫明朝ともえごぜんmini.otf', 12)
+        g.enfont = pygame.font.Font('./assets/fonts/ipaexg.ttf', 12)
 
         g.playerParty = actor.PlayerParty()
         g.playerParty.x = 5
@@ -52,7 +54,9 @@ class App:
         g.msg_engine= UI.MessageEngine()
 
         g.currentScene = deque()
-        g.currentScene.appendleft(screen.DemoField())
+        g.currentScene.appendleft(scene.DemoField())
+
+        g.gamewindow = UI.PlayerStatus()
 
         # メインループを起動
         global game_state
@@ -69,13 +73,14 @@ class App:
             for scene in reversed(g.currentScene):
                 if scene is None:
                     continue
-                # scene = g.currentScene[0]
                 scene.update()
                 scene.draw(self.surfaceScreen)
                 
             for event in pygame.event.get():
                 scene.handler(event)
 
+            g.gamewindow.draw(self.surfaceScreen)
+            
             pygame.display.update()  # 画面に描画
 
 
@@ -83,8 +88,10 @@ class App:
         pygame.mixer.quit()
 
 
+g.jpfont12: pygame.font
+g.enfont: pygame.font
 
-g.currentScene: deque
+g.currentScene: deque[scene]
 
 
 

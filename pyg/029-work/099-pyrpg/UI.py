@@ -1,5 +1,6 @@
 
 import pygame
+from pygame import rect
 from pygame.locals import *
 import codecs
 import os
@@ -8,14 +9,14 @@ import struct
 import sys
 import control
 import global_value as g
-
+from enum import IntEnum
 
 
 
 
 class Window:
 
-    EDGE_WIDTH = 4  # 白枠の幅
+    EDGE_WIDTH = 2  # 白枠の幅
 
     _visible: bool
 
@@ -24,6 +25,9 @@ class Window:
         self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)  # 内側の黒い矩形
         self._visible = False
 
+    def update(self):
+        pass
+
     def draw(self, screen):
         """ウィンドウを描画"""
         if not self.is_visible:
@@ -31,6 +35,10 @@ class Window:
 
         pygame.draw.rect(screen, (255,255,255), self.rect, 0)
         pygame.draw.rect(screen, (0,0,0), self.inner_rect, 0)
+
+    def handler(self, event):
+        pass
+
 
     def show(self):
         """ウィンドウを表示"""
@@ -60,7 +68,7 @@ class MessageWindow(Window):
     LINE_HEIGHT = 8            # 行間の大きさ
     animcycle = 24
 
-    def __init__(self, rect, msg_engine):
+    def __init__(self, rect ):
         super().__init__(rect)
         self.text_rect = self.inner_rect.inflate(-32, -32)  # テキストを表示する矩形
         self.text = []  # メッセージ
@@ -68,11 +76,10 @@ class MessageWindow(Window):
         self.cur_pos = 0  # 現在ページで表示した最大文字数
         self.next_flag = False  # 次ページがあるか？
         self.hide_flag = False  # 次のキー入力でウィンドウを消すか？
-        self.msg_engine = msg_engine  # メッセージエンジン
         self.cursor = control.Method.load_image("data", "cursor.png", -1)  # カーソル画像
         self.frame = 0
 
-    def set(self, message):
+    def settext(self, message):
         """メッセージをセットしてウィンドウを画面に表示する"""
         self.cur_pos = 0
         self.cur_page = 0
@@ -132,13 +139,31 @@ class MessageWindow(Window):
             if ch == "/" or ch == "%" or ch == "$": continue  # 制御文字は表示しない
             dx = self.text_rect[0] + MessageEngine.FONT_WIDTH * (i % self.MAX_CHARS_PER_LINE)
             dy = self.text_rect[1] + (self.LINE_HEIGHT + MessageEngine.FONT_HEIGHT) * (i // self.MAX_CHARS_PER_LINE)
-            self.msg_engine.draw_character(screen, (dx,dy), ch)
+            g.msg_engine.draw_character(screen, (dx,dy), ch)
+            
+            if __debug__:
+                print(f"ch={ch}")
+
         # 最後のページでない場合は▼を表示
         if (not self.hide_flag) and self.next_flag:
             if self.frame / self.animcycle % 2 == 0:
                 dx = self.text_rect[0] + (self.MAX_CHARS_PER_LINE/2) * MessageEngine.FONT_WIDTH - MessageEngine.FONT_WIDTH/2
                 dy = self.text_rect[1] + (self.LINE_HEIGHT + MessageEngine.FONT_HEIGHT) * 3
                 screen.blit(self.cursor, (dx,dy))
+
+    def handler(self, event):
+        super().handler(event)
+
+        if event.type == KEYDOWN:
+            
+            if event.key == K_SPACE:
+                if __debug__:
+                    print(f"K_SPACE")
+            
+            if event.key == K_RETURN:
+                if __debug__:
+                    print(f"K_RETURn")
+                self.next()
 
     def next(self):
         """メッセージを先に進める"""
@@ -153,6 +178,84 @@ class MessageWindow(Window):
             self.cur_pos = 0
             self.next_flag = False
             return True
+
+
+class BaseWindow:
+
+    EDGE_WIDTH = 2  # 白枠の幅
+
+    _visible: bool
+
+    def __init__(self, rect):
+        self.rect = rect  # 一番外側の白い矩形
+        self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)  # 内側の黒い矩形
+        self._visible = False
+
+    def update(self):
+        pass
+
+    def draw(self, screen):
+        """ウィンドウを描画"""
+        if not self.is_visible:
+            return
+
+        pygame.draw.rect(screen, (255,255,255), self.rect, 0)
+        pygame.draw.rect(screen, (0,0,0), self.inner_rect, 0)
+
+    def handler(self, event):
+        pass
+
+
+class PlayerStatus(pygame.sprite.Sprite):
+
+    EDGE_WIDTH = 2
+
+    _rows: list[pygame.Surface] = []
+
+    def __init__(self):
+        linewidth: int = 0
+
+        super(PlayerStatus, self).__init__()
+        self.surf = pygame.Surface((600, 175))
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect()
+
+        self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)
+        pygame.draw.rect(self.surf, (255,255,255), self.rect, linewidth)
+        pygame.draw.rect(self.surf, (0,0,0), self.inner_rect, linewidth)
+
+        txt = g.enfont.render(f"＃   {'ＣＨＡＲＡＣＴＥＲ　ＮＡＭＥ':<50}  {'ＣＬＡＳＳ':<20}  {'ＡＣ':<20}  {'ＨＩＴＳ':<20}  ",
+                                   False, Color('white') )
+        self._rows.append( txt )
+        txt = g.enfont.render(f"{'１':<1}   {'ａａａａａａａ':<50}        {'Ｎ－ＦＩＧ':>20}      {'－１０':>10}                 {'５５５':>10}  ", 
+                                   False, Color('white'))
+        self._rows.append( txt )
+
+    def update(self, pressed_keys):
+        '''
+        if pressed_keys[K_UP]:
+        
+        if pressed_keys[K_DOWN]:
+    
+        if pressed_keys[K_LEFT]:
+    
+        if pressed_keys[K_RIGHT]:
+        '''
+    def draw(self, screen):
+        screen.blit(self.surf, (0, 425) )
+        for i in range( len(self._rows) ):
+            screen.blit(self._rows[i], (20, 440 + (i * 20)) )
+
+g.gamewindow: PlayerStatus
+
+
+class GameWindow():
+    def __init__(self):
+        pass
+
+
+
+
 
 
 
@@ -372,43 +475,47 @@ class BattleStatusWindow(Window):
 
 
 class MessageEngine:
+
     FONT_WIDTH = 16
     FONT_HEIGHT = 22
-    WHITE, RED, GREEN, BLUE = 0, 160, 320, 480
+
+    class COLOR_POS(IntEnum):
+        WHITE = 0
+        RED = 160
+        GREEN = 320
+        BLUE = 480
+
     def __init__(self):
-        self.image = control.Method.load_image("data", "font.png", -1)
-        self.color = self.WHITE
+        self.image = control.Method.load_image("./assets/fonts/", "font.png", -1)
         self.kana2rect = {}
-        self.create_hash()
-    def set_color(self, color):
-        """文字色をセット"""
-        self.color = color
-        # 変な値だったらWHITEにする
-        if not self.color in [self.WHITE,self.RED,self.GREEN,self.BLUE]:
-            self.color = self.WHITE
-    def draw_character(self, screen, pos, ch):
+        self.read_hash()
+
+    def draw_character(self, screen, pos, ch, cpos = COLOR_POS.WHITE ):
         """1文字だけ描画する"""
         x, y = pos
         try:
             rect = self.kana2rect[ch]
-            screen.blit(self.image, (x,y), (rect.x+self.color,rect.y,rect.width,rect.height))
+            screen.blit(self.image, (x, y), (rect.x + cpos, rect.y, rect.width, rect.height ) )
         except KeyError:
             print("描画できない文字があります:%s" % ch)
             return
-    def draw_string(self, screen, pos, str):
+
+    def draw_string(self, screen, pos, str, cpos = COLOR_POS.WHITE ):
         """文字列を描画"""
         x, y = pos
         for i, ch in enumerate(str):
-            dx = x + self.FONT_WIDTH * i
-            self.draw_character(screen, (dx,y), ch)
-    def create_hash(self):
+            dx = x + MessageEngine.FONT_WIDTH * i
+            self.draw_character(screen, (dx,y), ch, cpos)
+
+    def read_hash(self):
         """文字から座標への辞書を作成"""
         filepath = os.path.join("data", "kana2rect.dat")
         fp = codecs.open(filepath, "r", "utf-8")
+
         for line in fp.readlines():
             line = line.rstrip()
-            d = line.split("\t")
-            kana, x, y, w, h = d[0], int(d[1]), int(d[2]), int(d[3]), int(d[4])
+            buf = line.split("\t")
+            kana, x, y, w, h = buf[0], int(buf[1]), int(buf[2]), int(buf[3]), int(buf[4])
             self.kana2rect[kana] = Rect(x, y, w, h)
         fp.close()
 
