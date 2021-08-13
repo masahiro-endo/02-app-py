@@ -56,7 +56,7 @@ class App:
         g.currentScene = deque()
         g.currentScene.appendleft(scene.DemoField())
 
-        g.gamewindow = UI.PlayerStatus()
+        g.gamewindow = UI.GameWindow()
 
         # メインループを起動
         global game_state
@@ -68,7 +68,7 @@ class App:
         """メインループ"""
         clock = pygame.time.Clock()
         while True:
-            clock.tick(60)
+            clock.tick(20)
 
             for scene in reversed(g.currentScene):
                 if scene is None:
@@ -79,8 +79,10 @@ class App:
             for event in pygame.event.get():
                 scene.handler(event)
 
+            pressed_keys = pygame.key.get_pressed()
+            g.gamewindow.handler(pressed_keys)
             g.gamewindow.draw(self.surfaceScreen)
-            
+
             pygame.display.update()  # 画面に描画
 
 

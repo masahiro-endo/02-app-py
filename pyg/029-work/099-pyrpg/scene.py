@@ -122,9 +122,6 @@ class CombatBattle(BaseScene):
 
         if event.type == KEYDOWN:
             
-            if __debug__:
-                print(f"_wnd.is_visible={self._wnd.is_visible}")
-            
             if self._wnd.is_visible:
                 self._wnd.hide()
                 
@@ -162,7 +159,7 @@ class DemoField(BaseScene):
     WALLCOLOR_FRONT = [
         None,
         pygame.Color('lightblue'),
-        pygame.Color('yellow'),
+        pygame.Color('blue'),
         pygame.Color('black'),
         pygame.Color('lightblue'),
     ]
@@ -171,13 +168,12 @@ class DemoField(BaseScene):
     WALLCOLOR_SIDE = [
         None,
         pygame.Color('darkblue'),
-        pygame.Color('yellow'),
+        pygame.Color('blue'),
         pygame.Color('black'),
         pygame.Color('darkblue'),
     ]
 
 
-    _wnd: deque
     _map = field.demotown.floormap
 
     def __init__(self):
@@ -187,8 +183,6 @@ class DemoField(BaseScene):
 
     def update(self):
         super().update()
-        for wnd in self._wnd:
-            wnd.update()
                   
     def draw(self, screen):
         super().draw(screen)
@@ -251,51 +245,27 @@ class DemoField(BaseScene):
             #               g.playerParty.direction, self._map)
 
 
-        for wnd in self._wnd:
-            wnd.draw(screen)
 
     def handler(self, event):
         super().handler(event)
 
         if event.type == KEYDOWN:
 
-            if event.key == K_SPACE:
-
-                if self._wnd.is_visible:  # ウィンドウ表示中
-                    self._wnd.next()
-                else:
-                    self._wnd.show()  # ウィンドウを表示
-                    self._wnd.settext(u"そのほうこうには　だれもいない。")
-
-            if event.key == K_RETURN:
-                global msg_engine
-                global currentScene
-                g.currentScene.pop()
-                g.currentScene.append(screen.Title(g.msg_engine))
-
-            # キャンプ
-            #if pyxel.btnp(pyxel.KEY_SPACE):
-            #    self.stateStack.push(State.CAMP)
-
-            # キー入力（右）
             if event.key == K_RIGHT:
                 self.tick = 0
                 g.playerParty.turnRight()
                 return
 
-            # キー入力（左）
             if event.key == K_LEFT:
                 self.tick = 0
                 g.playerParty.turnLeft()
                 return
 
-            # キー入力（下）
             if event.key == K_DOWN:
                 self.tick = 0
                 g.playerParty.turnBack()
                 return
 
-            # キー入力（上）
             if event.key == K_UP:
                 if self.can_move_forward(self._map, g.playerParty.x, g.playerParty.y, g.playerParty.direction):
                     self.tick = 0
@@ -312,8 +282,6 @@ class DemoField(BaseScene):
                     # pyxel.play(3, 6)
                     self.cntOops = 20
 
-                    self._wnd.show()
-                    self._wnd.settext(u"ＯＯＰＳ！")
 
 
     def can_move_forward(self, _map, _x: int, _y: int, _direction: int) -> bool:

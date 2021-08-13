@@ -1,6 +1,7 @@
 
 import pygame
 from pygame import rect
+from pygame import draw
 from pygame.locals import *
 import codecs
 import os
@@ -182,53 +183,42 @@ class MessageWindow(Window):
 
 class BaseWindow:
 
-    EDGE_WIDTH = 2  # 白枠の幅
+    EDGE_WIDTH = 2
 
-    _visible: bool
+    def __init__(self, rect: pygame.Rect):
+        linewidth: int = 0
 
-    def __init__(self, rect):
-        self.rect = rect  # 一番外側の白い矩形
-        self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)  # 内側の黒い矩形
-        self._visible = False
+        self.surf = pygame.Surface( (rect.width, rect.height) )
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect()
 
-    def update(self):
+        self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)
+        pygame.draw.rect(self.surf, Color('white'), self.rect, linewidth)
+        pygame.draw.rect(self.surf, Color('black'), self.inner_rect, linewidth)
+        self.rect = rect
+
+    def update(self, pressed_keys):
         pass
 
     def draw(self, screen):
-        """ウィンドウを描画"""
-        if not self.is_visible:
-            return
-
-        pygame.draw.rect(screen, (255,255,255), self.rect, 0)
-        pygame.draw.rect(screen, (0,0,0), self.inner_rect, 0)
+        screen.blit(self.surf, (self.rect.left, self.rect.top) )
 
     def handler(self, event):
         pass
 
 
-class PlayerStatus(pygame.sprite.Sprite):
-
-    EDGE_WIDTH = 2
+class PlayerStatus(BaseWindow):
 
     _rows: list[pygame.Surface] = []
 
-    def __init__(self):
-        linewidth: int = 0
+    def __init__(self, rect: pygame.Rect):
+        super().__init__(rect)
 
-        super(PlayerStatus, self).__init__()
-        self.surf = pygame.Surface((600, 175))
-        self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect()
-
-        self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)
-        pygame.draw.rect(self.surf, (255,255,255), self.rect, linewidth)
-        pygame.draw.rect(self.surf, (0,0,0), self.inner_rect, linewidth)
-
-        txt = g.enfont.render(f"＃   {'ＣＨＡＲＡＣＴＥＲ　ＮＡＭＥ':<50}  {'ＣＬＡＳＳ':<20}  {'ＡＣ':<20}  {'ＨＩＴＳ':<20}  ",
+        txt = g.enfont.render(f"＃   {'ＣＨＡＲＡＣＴＥＲ　ＮＡＭＥ':<30} {'ＣＬＡＳＳ':>20} {'ＡＣ':>10} {'ＨＩＴＳ':>10} {'ＳＴＡＴＵＳ':>10}",
                                    False, Color('white') )
         self._rows.append( txt )
-        txt = g.enfont.render(f"{'１':<1}   {'ａａａａａａａ':<50}        {'Ｎ－ＦＩＧ':>20}      {'－１０':>10}                 {'５５５':>10}  ", 
-                                   False, Color('white'))
+        txt = g.enfont.render(f"{'１':<1}   {'ａａａａａａａ':<50} {'Ｎ－ＦＩＧ':>20} {'－１０':>10} {'５５５':>10} {'５５５':>15}",
+                                   False, Color('white') )
         self._rows.append( txt )
 
     def update(self, pressed_keys):
@@ -242,21 +232,65 @@ class PlayerStatus(pygame.sprite.Sprite):
         if pressed_keys[K_RIGHT]:
         '''
     def draw(self, screen):
-        screen.blit(self.surf, (0, 425) )
+        super().draw(screen)
         for i in range( len(self._rows) ):
-            screen.blit(self._rows[i], (20, 440 + (i * 20)) )
+            screen.blit(self._rows[i], (20, 465 + (i * 20)) )
 
-g.gamewindow: PlayerStatus
+
+class MenuStatus(BaseWindow):
+
+    _rows: list[pygame.Surface] = []
+
+    def __init__(self, rect: pygame.Rect):
+        super().__init__(rect)
+
+        txt = g.enfont.render(f"{'Ｃ）ＡＭＰ':>15} {'Ｓ）ＴＡＴＵＳ':>15} {'Ｉ）ＮＳＰＥＣＴ':>15} {'Ｐ）ＩＣＫ':>15} {'Ｕ）ＳＥ':>15} {'Ｏ）ＦＦ':>15}",
+                                   False, Color('white') )
+        self._rows.append( txt )
+
+    def update(self, pressed_keys):
+        pass
+
+    def draw(self, screen):
+        super().draw(screen)
+        for i in range( len(self._rows) ):
+            screen.blit(self._rows[i], (0, 10)) 
 
 
 class GameWindow():
+
+    _keydict = {
+            pygame.K_c: {"func" : None, "visible": True},
+            pygame.K_s: {"func" : PlayerStatus, "visible": True},
+            pygame.K_i: {"func" : None, "visible": True},
+            pygame.K_p: {"func" : None, "visible": True},
+            pygame.K_u: {"func" : None, "visible": True},
+            pygame.K_o: {"func" : MenuStatus, "visible": True},
+    }
+
     def __init__(self):
-        pass
+        # for _key, _cont in self._keydict.items():
+        self._keydict[pygame.K_o]["func"] = MenuStatus( pygame.Rect( (0, 0), (600, 30) ) )
+        self._keydict[pygame.K_s]["func"] = PlayerStatus( pygame.Rect( (0, 450), (600, 150) ) )
+
+    def draw(self, screen):
+        for _key, _cont in self._keydict.items():
+            if _cont["func"] != None:
+                if _cont["visible"]:
+                    _cont["func"].draw(screen)
+
+    def handler(self, pressed_keys):
+
+        if pressed_keys[pygame.K_o]:
+            '''
+            if __debug__:
+                print(f"event.key={pressed_keys}")
+            '''
+            self._keydict[pygame.K_o]["visible"] = not self._keydict[K_o]["visible"]
 
 
 
-
-
+g.gamewindow: GameWindow
 
 
 class CommandWindow(Window):
