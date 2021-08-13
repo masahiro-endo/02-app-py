@@ -32,6 +32,7 @@ sounds = {}  # サウンド
 TITLE, FIELD, TALK, COMMAND, BATTLE_INIT, BATTLE_COMMAND, BATTLE_PROCESS = range(7)
 
 
+g.USREVENT_OOPS = pygame.USEREVENT + 1
 
 
 class App:
@@ -81,6 +82,7 @@ class App:
 
             pressed_keys = pygame.key.get_pressed()
             g.gamewindow.handler(pressed_keys)
+            g.gamewindow.update(event)
             g.gamewindow.draw(self.surfaceScreen)
 
             pygame.display.update()  # 画面に描画
@@ -89,6 +91,8 @@ class App:
         pygame.mixer.music.stop()
         pygame.mixer.quit()
 
+
+g.USREVENT_OOPS: pygame.USEREVENT
 
 g.jpfont12: pygame.font
 g.enfont: pygame.font

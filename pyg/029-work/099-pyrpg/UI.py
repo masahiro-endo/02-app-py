@@ -207,6 +207,35 @@ class BaseWindow:
         pass
 
 
+class CaptionWindow(BaseWindow):
+
+    EDGE_WIDTH = 2
+
+    def __init__(self, rect: pygame.Rect, caption: str):
+        linewidth: int = 0
+
+        self.surf = pygame.Surface( (rect.width, rect.height) )
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect()
+
+        self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)
+        pygame.draw.rect(self.surf, Color('white'), self.rect, linewidth)
+        pygame.draw.rect(self.surf, Color('black'), self.inner_rect, linewidth)
+        self.rect = rect
+
+        self._caption = g.enfont.render(f"{caption}", False, Color('white') )
+
+    def update(self, pressed_keys):
+        pass
+
+    def draw(self, screen):
+        screen.blit(self.surf, (self.rect.left, self.rect.top) )
+        screen.blit(self._caption, (self.rect.left + 10, self.rect.top + 10) )
+
+    def handler(self, event):
+        pass
+
+
 class PlayerStatus(BaseWindow):
 
     _rows: list[pygame.Surface] = []
@@ -222,15 +251,8 @@ class PlayerStatus(BaseWindow):
         self._rows.append( txt )
 
     def update(self, pressed_keys):
-        '''
-        if pressed_keys[K_UP]:
-        
-        if pressed_keys[K_DOWN]:
-    
-        if pressed_keys[K_LEFT]:
-    
-        if pressed_keys[K_RIGHT]:
-        '''
+        pass
+
     def draw(self, screen):
         super().draw(screen)
         for i in range( len(self._rows) ):
@@ -257,21 +279,59 @@ class MenuStatus(BaseWindow):
             screen.blit(self._rows[i], (0, 10)) 
 
 
-class GameWindow():
+class Camp():
 
+    _caption: CaptionWindow
+    _selectmenu: BaseWindow
+    _rows: list[pygame.Surface] = []
+
+    def __init__(self):
+        # super().__init__()
+
+        self._caption = CaptionWindow( pygame.Rect( (260, 0), (70, 30) ), "ＣＡＭＰ" )
+        self._selectmenu = BaseWindow( pygame.Rect( (225, 200), (150, 150) ) )
+
+        txt = g.enfont.render(f"{'＃）ＩＮＳＰＥＣＴ'}", False, Color('white') )
+        self._rows.append( txt )
+        txt = g.enfont.render(f"{'Ｒ）ＥＯＲＤＥＲ'}", False, Color('white') )
+        self._rows.append( txt )
+        txt = g.enfont.render(f"{'Ｅ）ＱＵＩＰ'}", False, Color('white') )
+        self._rows.append( txt )
+        txt = g.enfont.render(f"{'Ｌ⏎ＥＡＶＥ'}", False, Color('white') )
+        self._rows.append( txt )
+
+    def update(self, pressed_keys):
+        pass
+
+    def draw(self, screen):
+        # super().draw(screen)
+        self._caption.draw(screen)
+        self._selectmenu.draw(screen)
+
+        for i in range( len(self._rows) ):
+            screen.blit(self._rows[i], (250, 220 + (i * 20)) ) 
+
+
+
+
+class GameWindow():
+    
     _keydict = {
-            pygame.K_c: {"func" : None, "visible": True},
+            pygame.K_c: {"func" : Camp, "visible": False},
             pygame.K_s: {"func" : PlayerStatus, "visible": True},
             pygame.K_i: {"func" : None, "visible": True},
             pygame.K_p: {"func" : None, "visible": True},
             pygame.K_u: {"func" : None, "visible": True},
             pygame.K_o: {"func" : MenuStatus, "visible": True},
+            g.USREVENT_OOPS: {"func" : CaptionWindow, "visible": False},
     }
 
     def __init__(self):
-        # for _key, _cont in self._keydict.items():
-        self._keydict[pygame.K_o]["func"] = MenuStatus( pygame.Rect( (0, 0), (600, 30) ) )
-        self._keydict[pygame.K_s]["func"] = PlayerStatus( pygame.Rect( (0, 450), (600, 150) ) )
+        self._keydict[K_c]["func"] = Camp()
+        self._keydict[K_o]["func"] = MenuStatus( pygame.Rect( (0, 0), (600, 30) ) )
+        self._keydict[K_s]["func"] = PlayerStatus( pygame.Rect( (0, 450), (600, 150) ) )
+
+        self._keydict[g.USREVENT_OOPS]["func"] = CaptionWindow( pygame.Rect( (260, 200), (70, 30) ), "ＯＯＰＳ" )
 
     def draw(self, screen):
         for _key, _cont in self._keydict.items():
@@ -279,9 +339,26 @@ class GameWindow():
                 if _cont["visible"]:
                     _cont["func"].draw(screen)
 
+    def update(event):
+        if event.type == g.USREVENT_OOPS:
+                self._keydict[g.USREVENT_OOPS]["visible"] = not self._keydict[g.USREVENT_OOPS]["visible"]
+
+
     def handler(self, pressed_keys):
 
-        if pressed_keys[pygame.K_o]:
+        if pressed_keys[pygame.K_RETURN]:
+            if self._keydict[K_c]["visible"]:
+                self._keydict[K_c]["visible"] = not self._keydict[K_c]["visible"]
+                self._keydict[K_o]["visible"] = not self._keydict[K_o]["visible"]
+                
+        if pressed_keys[K_c]:
+            self._keydict[K_c]["visible"] = not self._keydict[K_c]["visible"]
+            self._keydict[K_o]["visible"] = not self._keydict[K_o]["visible"]
+
+        if pressed_keys[K_s]:
+            self._keydict[K_s]["visible"] = not self._keydict[K_s]["visible"]
+
+        if pressed_keys[K_o]:
             '''
             if __debug__:
                 print(f"event.key={pressed_keys}")

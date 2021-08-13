@@ -281,7 +281,7 @@ class DemoField(BaseScene):
                 else:
                     # pyxel.play(3, 6)
                     self.cntOops = 20
-
+                    pygame.time.set_timer(g.USREVENT_OOPS, 10)
 
 
     def can_move_forward(self, _map, _x: int, _y: int, _direction: int) -> bool:
