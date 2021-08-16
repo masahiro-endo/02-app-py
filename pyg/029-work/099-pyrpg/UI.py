@@ -318,12 +318,11 @@ class GameWindow():
     
     _keydict = {
             pygame.K_c: {"func" : Camp, "visible": False},
-            pygame.K_s: {"func" : PlayerStatus, "visible": True},
-            pygame.K_i: {"func" : None, "visible": True},
-            pygame.K_p: {"func" : None, "visible": True},
-            pygame.K_u: {"func" : None, "visible": True},
-            pygame.K_o: {"func" : MenuStatus, "visible": True},
-            g.USREVENT_OOPS: {"func" : CaptionWindow, "visible": False},
+            pygame.K_s: {"func" : PlayerStatus, "visible": False},
+            pygame.K_i: {"func" : None, "visible": False},
+            pygame.K_p: {"func" : None, "visible": False},
+            pygame.K_u: {"func" : None, "visible": False},
+            pygame.K_o: {"func" : MenuStatus, "visible": False},
     }
 
     def __init__(self):
@@ -331,18 +330,14 @@ class GameWindow():
         self._keydict[K_o]["func"] = MenuStatus( pygame.Rect( (0, 0), (600, 30) ) )
         self._keydict[K_s]["func"] = PlayerStatus( pygame.Rect( (0, 450), (600, 150) ) )
 
-        self._keydict[g.USREVENT_OOPS]["func"] = CaptionWindow( pygame.Rect( (260, 200), (70, 30) ), "ＯＯＰＳ" )
-
     def draw(self, screen):
         for _key, _cont in self._keydict.items():
             if _cont["func"] != None:
                 if _cont["visible"]:
                     _cont["func"].draw(screen)
 
-    def update(event):
-        if event.type == g.USREVENT_OOPS:
-                self._keydict[g.USREVENT_OOPS]["visible"] = not self._keydict[g.USREVENT_OOPS]["visible"]
-
+    def update(self, event):
+        pass
 
     def handler(self, pressed_keys):
 

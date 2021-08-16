@@ -1,5 +1,6 @@
 
 
+from typing import List
 import pygame
 from pygame.locals import *
 import codecs
@@ -14,6 +15,7 @@ import actor
 import field
 import const
 import global_value as g
+from const import Alignment
 
 
 
@@ -284,233 +286,207 @@ g.playerParty: PlayerParty
 
 
 
+class HumanGenerator(object):
+    '''
+    人間のキャラクターを自動作成するクラス
+    '''
+
+    @staticmethod
+    def generate(_level: int, _alignment: int = Alignment.GOOD) -> Human:
+        '''
+        生成する
+
+        Levelを与えるとランダムにパラメタが設定されたHumanクラスのインスタンスを返却する
+        '''
+        human = Human()
+
+        for _ in range(_level):
+            human.levelup()
+
+        human.exp = random.randint(0, 10) + _level * 5
+        human.gold = random.randint(1, _level * 100)
+        human.weapon = weaponParams[random.randint(0, 3)]
+        if random.randint(0, 2) == 0:
+            human.armor = None
+        else:
+            human.armor = armorParams[random.randint(0, 1)]
+        human.name = HumanGenerator()._generateName()
+        human.head = random.randint(0, 159)
+        human.body = random.randint(0, 2)
+        human.alignment = _alignment
+        human.isEscape = True if _alignment == Alignment.GOOD else False
+        human.blt_w = 8
+        human.blt_h = 19
+
+        return human
+
+    @staticmethod
+    def _generateName() -> str:
+        '''
+        名前を生成する
+        '''
+        _name1 = [
+            "ANNA", "ARES", "ALEY", "ADAL", "AR",
+            "BEBY", "BORD", "BEAN", "BOYO", "BO",
+            "CHRY", "CHAC", "CIEL", "CALM", "CAN",
+            "DALD", "DORY", "DEOL", "DWAF", "DON",
+            "ENNE", "ELAC", "EYAR", "ERAC", "EMY",
+            "FARD", "FISH", "FEEN", "FOYA", "FORT",
+            "GEAR", "GINN", "GORY", "GANG", "GON",
+            "HEAR", "HACK", "HIYA", "HIRO", "HELL",
+            "INO", "IYAN", "IELA", "IONC", "IN",
+            "JOE", "JACK", "JOHN", "JEIB", "JAY",
+            "KARL", "KIM", "KALK", "KORE", "KAN",
+            "LARY", "LESY", "LOKA", "LYCK", "LA",
+            "MICH", "MARY", "MOMO", "MEAR", "MEGA",
+            "NU", "NOE", "NACK", "NICK", "NEL",
+            "OTTO", "ORA", "OMNY", "OWAR", "OL",
+            "PYCKY", "PACK", "PARY", "PONY", "PU",
+            "QUER", "QUCK", "QUA", "QUNE", "QEL",
+            "ROBY", "RABI", "RENY", "ROSA", "REI",
+            "SHERY", "SACK", "SOYA", "SEAN", "SOL",
+            "TERL", "TONY", "TORA", "TANY", "TOM",
+            "UAE", "UNO", "UNIY", "UES", "US",
+            "VARY", "VOCK", "VELY", "VYLO", "VON",
+            "WICK", "WOOD", "WAGO", "WENN", "WARE",
+            "XECK", "XALY", "XYAS", "XORA", "XAN",
+            "YEAN", "YONA", "YOHA", "YACK", "YRE",
+            "ZALY", "ZOE", "ZEE", "ZERA", "ZOL"]
+        _name2 = ["", "SON", "A", "RY", "N", "NA", "NIA", "PU", "PO", "ON", "Y",
+                  "K", "S", "EL", "ER", "CS", "FA", "PI", "C", "CK", "DA", "ON", "B"]
+
+        _idx1 = random.randint(0, len(_name1) - 1)
+        _idx2 = random.randint(0, len(_name2) - 1)
+
+        return _name1[random.randint(0, _idx1)] + _name2[random.randint(0, _idx2)]
 
 
-class CCharacter:
-    """一般キャラクタークラス"""
-    speed = 4  # 1フレームの移動ピクセル数
-    animcycle = 24  # アニメーション速度
-    frame = 0
-    # キャラクターイメージ（mainで初期化）
-    # キャラクター名 -> 分割画像リストの辞書
-    images = {}
-    def __init__(self, name, pos, dir, movetype, message):
-        self.name = name  # キャラクター名（ファイル名と同じ）
-        self.image = self.images[name][0]  # 描画中のイメージ
-        self.x, self.y = pos[0], pos[1]  # 座標（単位：マス）
-        self.rect = self.image.get_rect(topleft=(self.x*GS, self.y*GS))
-        self.vx, self.vy = 0, 0  # 移動速度
-        self.moving = False  # 移動中か？
-        self.direction = dir  # 向き
-        self.movetype = movetype  # 移動タイプ
-        self.message = message  # メッセージ
-    def update(self, map):
-        """キャラクター状態を更新する。
-        mapは移動可能かの判定に必要。"""
-        # プレイヤーの移動処理
-        if self.moving == True:
-            # ピクセル移動中ならマスにきっちり収まるまで移動を続ける
-            self.rect.move_ip(self.vx, self.vy)
-            if self.rect.left % GS == 0 and self.rect.top % GS == 0:  # マスにおさまったら移動完了
-                self.moving = False
-                self.x = int(self.rect.left / GS)
-                self.y = int(self.rect.top / GS)
-        elif self.movetype == MOVE and random.random() < PROB_MOVE:
-            # 移動中でないならPROB_MOVEの確率でランダム移動開始
-            self.direction = random.randint(0, 3)  # 0-3のいずれか
-            if self.direction == DOWN:
-                if map.is_movable(self.x, self.y+1):
-                    self.vx, self.vy = 0, self.speed
-                    self.moving = True
-            elif self.direction == LEFT:
-                if map.is_movable(self.x-1, self.y):
-                    self.vx, self.vy = -self.speed, 0
-                    self.moving = True
-            elif self.direction == RIGHT:
-                if map.is_movable(self.x+1, self.y):
-                    self.vx, self.vy = self.speed, 0
-                    self.moving = True
-            elif self.direction == UP:
-                if map.is_movable(self.x, self.y-1):
-                    self.vx, self.vy = 0, -self.speed
-                    self.moving = True
-        # キャラクターアニメーション（frameに応じて描画イメージを切り替える）
-        self.frame += 1
-        self.image = self.images[self.name][int(self.direction*4+self.frame/self.animcycle%4)]
-    def draw(self, screen, offset):
-        """オフセットを考慮してプレイヤーを描画"""
-        offsetx, offsety = offset
-        px = self.rect.topleft[0]
-        py = self.rect.topleft[1]
-        screen.blit(self.image, (px-offsetx, py-offsety))
-    def set_pos(self, x, y, dir):
-        """キャラクターの位置と向きをセット"""
-        self.x, self.y = x, y
-        self.rect = self.image.get_rect(topleft=(self.x*GS, self.y*GS))
-        self.direction = dir
-    def __str__(self):
-        return "CHARA,%s,%d,%d,%d,%d,%s" % (self.name,self.x,self.y,self.direction,self.movetype,self.message)
+class EnemyParty(Party):
+    '''
+    敵パーティークラス\n
+    Partyクラスを継承。\n
+    HumanクラスまたはMonsterクラスを格納したListを管理する。\n
+    利用するクラスでは、直接このクラスを使用せず、インスタンスを格納したenemyPartyをimportして使用すること。\n
+    '''
 
-class Player(Character):
-    """プレイヤークラス"""
-    def __init__(self, name, pos, dir, leader, party):
-        Character.__init__(self, name, pos, dir, False, None)
-        self.leader = leader
-        self.party = party
-    def update(self, map, battle):
-        """プレイヤー状態を更新する。
-        mapは移動可能かの判定に必要。
-        battleはエンカウントに必要。"""
-        global game_state
-        # プレイヤーの移動処理
-        if self.moving == True:
-            # ピクセル移動中ならマスにきっちり収まるまで移動を続ける
-            self.rect.move_ip(self.vx, self.vy)
-            if self.rect.left % GS == 0 and self.rect.top % GS == 0:  # マスにおさまったら移動完了
-                self.moving = False
-                self.x = int(self.rect.left / GS)
-                self.y = int(self.rect.top / GS)
-                if not self.leader: return  # リーダーでなければイベントは無視
-                event = map.get_event(self.x, self.y)
-                if isinstance(event, MoveEvent):  # MoveEventなら
-                    sounds["step"].play()
-                    dest_map = event.dest_map
-                    dest_x = event.dest_x
-                    dest_y = event.dest_y
-                    map.create(dest_map)
-                    # パーティの全員を移動先マップへ
-                    for player in self.party.member:
-                        player.set_pos(dest_x, dest_y, DOWN)  # プレイヤーを移動先座標へ
-                        player.moving = False
-                # エンカウント発生
-                if map.name == "field" and random.random() < PROB_ENCOUNT:
-                    game_state = BATTLE_INIT
-                    battle.start()
-        # キャラクターアニメーション（frameに応じて描画イメージを切り替える）
-        self.frame += 1
-        self.image = self.images[self.name][int(self.direction*4+self.frame/self.animcycle%4)]
-    def move_to(self, destx, desty):
-        """現在位置から(destx,desty)への移動を開始"""
-        dx = destx - self.x
-        dy = desty - self.y
-        # 向きを変える
-        if dx == 1: self.direction = RIGHT
-        elif dx == -1: self.direction = LEFT
-        elif dy == -1: self.direction = UP
-        elif dy == 1: self.direction = DOWN
-        # 速度をセット
-        self.vx, self.vy = dx*self.speed, dy*self.speed
-        # 移動開始
-        self.moving = True
-    def talk(self, map):
-        """キャラクターが向いている方向のとなりにキャラクターがいるか調べる"""
-        # 向いている方向のとなりの座標を求める
-        nextx, nexty = self.x, self.y
-        if self.direction == DOWN:
-            nexty = self.y + 1
-            event = map.get_event(nextx, nexty)
-            if isinstance(event, Object) and event.mapchip == 41:
-                nexty += 1  # テーブルがあったらさらに隣
-        elif self.direction == LEFT:
-            nextx = self.x - 1
-            event = map.get_event(nextx, nexty)
-            if isinstance(event, Object) and event.mapchip == 41:
-                nextx -= 1
-        elif self.direction == RIGHT:
-            nextx = self.x + 1
-            event = map.get_event(nextx, nexty)
-            if isinstance(event, Object) and event.mapchip == 41:
-                nextx += 1
-        elif self.direction == UP:
-            nexty = self.y - 1
-            event = map.get_event(nextx, nexty)
-            if isinstance(event, Object) and event.mapchip == 41:
-                nexty -= 1
-        # その方向にキャラクターがいるか？
-        chara = map.get_chara(nextx, nexty)
-        # キャラクターがいればプレイヤーの方向へ向ける
-        if chara != None:
-            if self.direction == DOWN:
-                chara.direction = UP
-            elif self.direction == LEFT:
-                chara.direction = RIGHT
-            elif self.direction == RIGHT:
-                chara.direction = LEFT
-            elif self.direction == UP:
-                chara.direction = DOWN
-            chara.update(map)  # 向きを変えたので更新
-        return chara
-    def search(self, map):
-        """足もとに宝箱があるか調べる"""
-        event = map.get_event(self.x, self.y)
-        if isinstance(event, Treasure):
-            return event
-        return None
-    def open(self, map):
-        """目の前にとびらがあるか調べる"""
-        # 向いている方向のとなりの座標を求める
-        nextx, nexty = self.x, self.y
-        if self.direction == DOWN:
-            nexty = self.y + 1
-        elif self.direction == LEFT:
-            nextx = self.x - 1
-        elif self.direction == RIGHT:
-            nextx = self.x + 1
-        elif self.direction == UP:
-            nexty = self.y - 1
-        # その場所にとびらがあるか？
-        event = map.get_event(nextx, nexty)
-        if isinstance(event, Door):
-            return event
-        return None
-
-class Party:
     def __init__(self):
-        # Partyのメンバーリスト
-        self.member = []
-    def add(self, player):
-        """Partyにplayerを追加"""
-        self.member.append(player)
-    def update(self, map, battle):
-        # Party全員を更新
-        for player in self.member:
-            player.update(map, battle)
-        # 移動中でないときにキー入力があったらParty全員を移動開始
-        if not self.member[0].moving:
-            pressed_keys = pygame.key.get_pressed()
-            if pressed_keys[K_DOWN]:
-                # 先頭キャラは移動できなくても向きは変える
-                self.member[0].direction = DOWN
-                # 先頭キャラが移動できれば
-                if map.is_movable(self.member[0].x, self.member[0].y+1):
-                    # 後ろにいる仲間から1つ前の仲間の位置へ移動開始
-                    for i in range(len(self.member)-1,0,-1):
-                        self.member[i].move_to(self.member[i-1].x,self.member[i-1].y)
-                    # 先頭キャラを最後に移動開始
-                    self.member[0].move_to(self.member[0].x,self.member[0].y+1)
-            elif pressed_keys[K_LEFT]:
-                self.member[0].direction = LEFT
-                if map.is_movable(self.member[0].x-1, self.member[0].y):
-                    for i in range(len(self.member)-1,0,-1):
-                        self.member[i].move_to(self.member[i-1].x,self.member[i-1].y)
-                    self.member[0].move_to(self.member[0].x-1,self.member[0].y)
-            elif pressed_keys[K_RIGHT]:
-                self.member[0].direction = RIGHT
-                if map.is_movable(self.member[0].x+1, self.member[0].y):
-                    for i in range(len(self.member)-1,0,-1):
-                        self.member[i].move_to(self.member[i-1].x,self.member[i-1].y)
-                    self.member[0].move_to(self.member[0].x+1,self.member[0].y)
-            elif pressed_keys[K_UP]:
-                self.member[0].direction = UP
-                if map.is_movable(self.member[0].x, self.member[0].y-1):
-                    for i in range(len(self.member)-1,0,-1):
-                        self.member[i].move_to(self.member[i-1].x,self.member[i-1].y)
-                    self.member[0].move_to(self.member[0].x,self.member[0].y-1)
-    def draw(self, screen, offset):
-        # Partyの全員を描画
-        # 重なったとき先頭キャラが表示されるように後ろの人から描画
-        for player in self.member[::-1]:
-            player.draw(screen, offset)
+        super().__init__()
+
+        # レベル
+        self.level = 0
+
+        # アイテム
+        self.item = None
+
+        # アイテム種別
+        self.itemType = None
+
+    def initialize(self) -> None:
+        self.memberList = []
+
+    def generate(self, enemyClass) -> None:
+        '''
+        敵パーティーを設定する\n
+        パーティーの生成はEnemyPartyGeneratorメソッドで行い、生成したパーティーのレベルを保存する
+        '''
+        self.memberList = EnemyPartyGenerator.generate(enemyClass)
+        self.level = self.memberList[0].level
+
+        if self.memberList[0].hasItem and random.randint(0, 32) == 0:
+            # アイテムを持っている場合、ランダムで選出
+            if self.memberList[0].name[0:5] == "HIDER":
+                self.item = armorParams[5]
+                self.itemType = ItemType.ARMOR
+            else:
+                _r = random.randint(0, 4)
+                if _r == 0 or _r == 1:
+                    # 武器を選出
+                    _rndMin = enemyParty.level - 1
+                    _rndMax = enemyParty.level + 2
+                    self.item = weaponParams[random.randint(
+                        _rndMin, _rndMax if _rndMax < 9 else 8)]
+                    self.item.attack = int(self.item.attack * 1.5)
+                    self.itemType = ItemType.WEAPON
+                elif _r == 2 or _r == 3:
+                    # 鎧を選出
+                    _rndMin = (enemyParty.level - 1) // 2
+                    _rndMax = (enemyParty.level + 2) // 2 + 1
+                    self.item = armorParams[random.randint(
+                        _rndMin, _rndMax if _rndMax < 5 else 4)]
+                    self.item.armor = int(self.item.armor * 1.5)
+                    self.itemType = ItemType.ARMOR
+
+    def isEscape(self) -> bool:
+        if isinstance(self.memberList[0], Monster):
+            return self.memberList[0].isEscape
+        else:
+            True
+
+
+enemyParty = EnemyParty()
+
+
+class EnemyPartyGenerator(object):
+    '''
+    敵のパーティーを自動生成するクラス
+    '''
+
+    @staticmethod
+    def generate(enemyClass) -> List:
+        '''
+        敵のパーティー生成
+
+        enemyClassがHuman型の場合はPlayerPartyGeneratorの結果をそのまま返却する（使用するレベルはenemyClassが持っているレベル）
+        以外の場合はenemyClassの持つ情報を元に新しくmemberListを生成して返却する
+        '''
+        # パーティーのメンバーリスト初期化
+        _memberList = []
+
+        if isinstance(enemyClass, Human):
+            _memberList = HumanPartyGenerator.generate(
+                enemyClass.level, Alignment.GOOD if random.randint(1, 6) < 5 else Alignment.EVIL)
+            if __debug__:
+                print("enemy party generated.")
+                for v in _memberList:
+                    print(v)
+            return _memberList
+
+        _count = random.randint(enemyClass.occr_min, enemyClass.occr_max)
+
+        for idx in range(_count):
+            _monster = Monster()
+            _monster.name = enemyClass.name + " " + chr(65 + idx)
+            _monster.blt_x = enemyClass.blt_x
+            _monster.blt_y = enemyClass.blt_y
+            _monster.blt_w = enemyClass.blt_w
+            _monster.blt_h = enemyClass.blt_h
+            _monster.level = enemyClass.level
+            _monster.life = enemyClass.life + \
+                random.randint(0, enemyClass.life // 5 + 1)
+            _monster.maxlife = _monster.life
+            _monster.strength = enemyClass.strength + \
+                random.randint(0, enemyClass.strength // 5 + 1)
+            _monster.defend = enemyClass.defend + \
+                random.randint(0, enemyClass.defend // 5 + 1)
+            _monster.dexterity = enemyClass.dexterity + \
+                random.randint(0, enemyClass.dexterity // 5 + 1)
+            _monster.exp = enemyClass.exp
+            _monster.gold = enemyClass.gold
+            _monster.isEscape = enemyClass.isEscape
+            _monster.hasItem = enemyClass.hasItem
+
+            # 表示位置
+            _monster.setDisplayPosition(_count, idx)
+
+            _memberList.append(_monster)
+
+        if __debug__:
+            print("enemy party generated.")
+            for v in _memberList:
+                print(v)
+
+        return _memberList
+
 
 
 
