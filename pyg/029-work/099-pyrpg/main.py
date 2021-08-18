@@ -38,8 +38,11 @@ g.USREVENT_OOPS = pygame.USEREVENT + 1
 class App:
 
     def __init__(self):
+        pygame.mixer.quit()
+        pygame.mixer.pre_init(buffer=128)
         pygame.mixer.init()
         pygame.init()
+        
         # フルスクリーン化 + Hardware Surface使用
         self.surfaceScreen = pygame.display.set_mode(SCR_RECT.size, DOUBLEBUF|HWSURFACE)
         pygame.display.set_caption("PyRPG 27 戦闘画面")
@@ -55,7 +58,7 @@ class App:
         g.msg_engine= UI.MessageEngine()
 
         g.currentScene = deque()
-        g.currentScene.appendleft(scene.DemoField())
+        g.currentScene.appendleft(scene.BaseField())
 
         g.gamewindow = UI.GameWindow()
 
@@ -82,7 +85,7 @@ class App:
 
             pressed_keys = pygame.key.get_pressed()
             g.gamewindow.handler(pressed_keys)
-            g.gamewindow.update(event)
+            g.gamewindow.update()
             g.gamewindow.draw(self.surfaceScreen)
 
             pygame.display.update()  # 画面に描画

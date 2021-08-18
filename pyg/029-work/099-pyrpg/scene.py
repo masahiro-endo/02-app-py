@@ -134,7 +134,9 @@ class CombatBattle(BaseScene):
                     self._actlist.popleft()
 
 
-class DemoField(BaseScene):
+
+
+class BaseField(BaseScene):
 
     # 自分の位置と方向からマップのどこを参照するかを、参照順に定義
     # 参照順のイメージは以下（上向きである前提、自分の位置はDとする）
@@ -177,9 +179,7 @@ class DemoField(BaseScene):
     _map = field.demotown.floormap
 
     def __init__(self):
-        self._wnd = deque()
-        self._wnd.appendleft( UI.MessageWindow( Rect(140,334,360,140) ) )
-        # self._wnd[0].show()
+        pass
 
     def update(self):
         super().update()
