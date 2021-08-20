@@ -11,8 +11,6 @@ import sys
 import control
 from enum import IntEnum
 import UI
-import actor
-import field
 import const
 import global_value as g
 from const import Alignment

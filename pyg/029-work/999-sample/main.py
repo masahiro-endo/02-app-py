@@ -1,3 +1,4 @@
+from typing import List
 import pygame
 import random
 import os
@@ -32,7 +33,7 @@ class Player(pygame.sprite.Sprite):
 
     # Move the sprite based on keypresses
     # 
-    def update(self, pressed_keys):
+    def update(self, pressed_keys: List[bool]):
         if pressed_keys[K_UP]:
             self.rect.move_ip(0, -5)
             # move_up_sound.play()
@@ -60,6 +61,10 @@ class Player(pygame.sprite.Sprite):
         
         if self.rect.bottom >= SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
+    
+    def is_collide(self, rect: pygame.Rect)->bool:
+        return ( max(self.rect.left, rect.left) <= min(self.rect.right, rect.right) 
+          and max(self.rect.bottom, rect.bottom) <= min(self.rect.top, rect.top) )
 
 
 # Define the enemy object by extending pygame.sprite.Sprite

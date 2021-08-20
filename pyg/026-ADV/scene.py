@@ -13,7 +13,6 @@ import control
 from enum import IntEnum
 import UI
 import actor
-import field
 import const
 import math
 import global_value as g
@@ -63,38 +62,19 @@ class BaseScene:
 
 
 
-class Demo(Scene):
-
-    wnd: UI.Window
+class Demo(BaseScene):
 
     def __init__(self):
-        self.wnd = UI.MessageWindow(Rect(140,334,360,140), g.msg_engine)
+        pass
 
     def update(self):
-        self.wnd.update()
-    
+        super().update()
+
     def draw(self, screen):
-        screen.fill((128,128,128))
-        self.wnd.draw(screen)  # ウィンドウの描画
+        super().draw(screen)
 
     def handler(self, event):
         super().handler(event)
-
-        if event.type == KEYDOWN:
-
-            if event.key == K_SPACE:
-
-                if self.wnd.is_visible:  # ウィンドウ表示中
-                    self.wnd.next()
-                else:
-                    self.wnd.show()  # ウィンドウを表示
-                    self.wnd.set(u"そのほうこうには　だれもいない。")
-                if __debug__:
-                    print("wnd.visible=" + str(self.wnd.is_visible))
-
-            if event.key == K_RETURN:
-                g.currentScene.pop()
-                g.currentScene.append(screen.Title(g.msg_engine))
 
 
 

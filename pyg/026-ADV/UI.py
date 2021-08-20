@@ -1,4 +1,6 @@
 
+from collections import OrderedDict, deque
+import typing
 import pygame
 from pygame import rect
 from pygame import draw
@@ -10,10 +12,10 @@ import struct
 import sys
 import control
 import global_value as g
-from enum import IntEnum
+from enum import IntEnum, auto
 import math
-
-
+import json
+from typing import Any, List, Text, Tuple
 
 
 
@@ -38,16 +40,14 @@ class BaseWindow:
     def update(self):
         pass
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface):
         screen.blit(self.surf, (self.rect.left, self.rect.top) )
 
-    def handler(self, event):
-        pass
 
 
-class PageCursor():
+class LineCursor():
 
-    def __init__(self, x, y, color):
+    def __init__(self, x: int, y: int, color: Color):
         self.x = x
         self.y = y
         self.color = color
@@ -56,227 +56,228 @@ class PageCursor():
     def update(self):
         self.theta += 10
 
-    def draw(self, screen):
-
+    def draw(self, screen:pygame.Surface):
         self.theta %= 360 
         r = abs( 5 * math.sin(math.radians(self.theta)) )
         pygame.draw.polygon(screen, self.color, 
                 ([self.x - r, self.y], [self.x + r, self.y], [self.x, self.y + 12]) )
 
 
+class PageCursor():
+
+    def __init__(self, x: int, y: int, color: Color):
+        self.x = x
+        self.y = y
+        self.color = color
+        self.trans = 0
+
+        self.surf = pygame.Surface( (10, 15), flags=pygame.SRCALPHA)
+        self.surf.set_colorkey(Color('black'))
+        self.surf.fill(Color('black'))
+        self.rect = self.surf.get_rect()
+
+        pygame.draw.polygon(self.surf, self.color, 
+                ( [self.rect.x, self.rect.y], 
+                  [self.rect.x + 10, self.rect.y], 
+                  [self.rect.x + 10, self.rect.y + 10], 
+                  [self.rect.x + 5, self.rect.y + 10], 
+                  [self.rect.x + 5, self.rect.y + 15], 
+                  [self.rect.x, self.rect.y + 15]) )
+        pygame.draw.polygon(self.surf, self.color, 
+                ( [self.rect.x + 7, self.rect.y + 12], 
+                  [self.rect.x + 10, self.rect.y + 12], 
+                  [self.rect.x + 7, self.rect.y + 15]) )
+
+    def update(self):
+        self.trans += 10
+
+    def draw(self, screen: pygame.Surface):
+        self.trans %= 250
+        self.surf.set_alpha(self.trans)
+        screen.blit(self.surf, (self.x, self.y) )
+
+
+class FontCursor():
+
+    def __init__(self, x: int, y: int, color: Color):
+        self.x = x
+        self.y = y
+        self.color = color
+        self.trans = 0
+
+        self.font: pygame.Surface = g.enfont.render(f"{'ＰＲＥＳＳ　ＥＮＴＥＲ　ＫＥＹ':<30}", False, Color('white') )
+        self.rect: pygame.Rect = self.font.get_rect()
+        self.surf = pygame.Surface( (self.rect.width, self.rect.height), flags=pygame.SRCALPHA)
+        self.surf.set_colorkey(Color('black'))
+        self.surf.fill(Color('black'))
+        self.surf.blit(self.font, (self.rect.left, self.rect.top) )
+
+
+    def update(self):
+        self.trans += 10
+
+    def draw(self, screen: pygame.Surface):
+        self.trans %= 250
+        self.surf.set_alpha(self.trans)
+        screen.blit(self.surf, (self.x, self.y) )
+
+
+
 class MessageWindow(BaseWindow):
 
-    MAX_CHARS_PER_LINE = 20    # 1行の最大文字数
-    MAX_LINES_PER_PAGE = 3     # 1行の最大行数（4行目は▼用）
-    MAX_CHARS_PER_PAGE = 20*3  # 1ページの最大文字数
-    MAX_LINES = 30             # メッセージを格納できる最大行数
-    LINE_HEIGHT = 8            # 行間の大きさ
-    animcycle = 24
+    class CHARPTR(IntEnum):
+        IS_ACTIVE = 0
+        WAIT_LINE = auto()
+        WAIT_PAGE = auto()
+        ENDOFLINE = auto()
+
+    class LIMIT(IntEnum):
+        CHAR_COUNT = 10
+        LINE_COUNT = 4
+        PAGE_COUNT = 999
+
+    font_width: int
+    font_height: int
 
     def __init__(self, rect: pygame.Rect):
         super().__init__(rect)
 
-        self.text = [
-            "あああああああああ",
-            "いいいいいいい",
-            "ううううう",
-            "えええ",
-            "おお",
-        ]
-        self.cur_page = 0  # 現在表示しているページ
-        self.cur_pos = 0  # 現在ページで表示した最大文字数
-        self.next_flag = False  # 次ページがあるか？
-        self.hide_flag = False  # 次のキー入力でウィンドウを消すか？
-        self.cursor = PageCursor(rect.left + (rect.width // 2), rect.top + (rect.height - 20), Color("white"))
+        dx = rect.left + (rect.width // 2)
+        dy = rect.top + (rect.height - 20)
+        self.lineCursor = LineCursor(dx, dy, Color("white"))
+        self.pageCursor = PageCursor(dx, dy, Color("white"))
+        self.endCursor = FontCursor(dx, dy, Color("white"))
         self.tick = 0
 
-    def set(self, message):
-        """メッセージをセットしてウィンドウを画面に表示する"""
-        self.cur_pos = 0
-        self.cur_page = 0
-        self.next_flag = False
-        self.hide_flag = False
-        # 全角スペースで初期化
-        self.text = [u'　'] * (self.MAX_LINES*self.MAX_CHARS_PER_LINE)
-        # メッセージをセット
-        p = 0
-        for i in range(len(message)):
-            ch = message[i]
-            if ch == "/":  # /は改行文字
-                self.text[p] = "/"
-                p += self.MAX_CHARS_PER_LINE
-                p = int((p/self.MAX_CHARS_PER_LINE)*self.MAX_CHARS_PER_LINE)
-            elif ch == "%":  # \fは改ページ文字
-                self.text[p] = "%"
-                p += self.MAX_CHARS_PER_PAGE
-                p = int((p/self.MAX_CHARS_PER_PAGE)*self.MAX_CHARS_PER_PAGE)
-            else:
-                self.text[p] = ch
-                p += 1
-        self.text[p] = "$"  # 終端文字
-        self.show()
+        self.json_dict = self.read_json()
+        for self.currPage in self.json_dict: break
+        self.text = self.json_dict[self.currPage]["text"]
+        self.next = self.json_dict[self.currPage]["next"]
+
+        self.buf: str = ""
+        self.ptr = 0
+
+        self.surfs: deque[pygame.Surface] = deque()
+        self.surfs.append(self.font_surface(self.buf))
+        self.font_width, self.font_height = self.font_size()
+
+        '''
+        s = '123456789'
+        v = [s[i: i+3] for i in range(0, len(s), 3)]
+        # ['123', '456', '789']
+        '''
+        self.status = self.CHARPTR.IS_ACTIVE
+
+
+    def read_json(self)->typing.Any:
+        f = open('./assets/events/scenario1.json', 'r', encoding="utf-8")
+        json_dict = json.load(f, object_pairs_hook=OrderedDict)
+
+        if __debug__:
+            for x in json_dict:
+                print(f'{x}:{json_dict[x]}')
+
+        return json_dict
+
+    def font_surface(self, buf: str) -> pygame.Surface:
+        return g.enfont.render(f"{buf}", False, Color("white"))
+
+    def font_size(self) -> Tuple[int, int]:
+        return g.enfont.size("あ")
+
+    def prepare_nextpage(self):
+        self.text = self.json_dict[self.next]["text"]
+        self.next = self.json_dict[self.next]["next"]
+        self.buf = ""
+
+        self.ptr = 0
+        self.status = self.CHARPTR.WAIT_PAGE
 
     def update(self):
         super().update()
-        self.cursor.update()
 
-        '''
-        if self.next_flag == False:
-            self.cur_pos += 1  # 1文字流す
-            # テキスト全体から見た現在位置
-            p = self.cur_page * self.MAX_CHARS_PER_PAGE + self.cur_pos
-            if self.text[p] == "/":  # 改行文字
-                self.cur_pos += self.MAX_CHARS_PER_LINE
-                self.cur_pos = int((self.cur_pos/self.MAX_CHARS_PER_LINE) * self.MAX_CHARS_PER_LINE)
-            elif self.text[p] == "%":  # 改ページ文字
-                self.cur_pos += self.MAX_CHARS_PER_PAGE
-                self.cur_pos = int((self.cur_pos/self.MAX_CHARS_PER_PAGE) * self.MAX_CHARS_PER_PAGE)
-            elif self.text[p] == "$":  # 終端文字
-                self.hide_flag = True
-            # 1ページの文字数に達したら▼を表示
-            if self.cur_pos % self.MAX_CHARS_PER_PAGE == 0:
-                self.next_flag = True
+        if self.status == self.CHARPTR.WAIT_LINE:
+            self.lineCursor.update()
+            return
+        if self.status == self.CHARPTR.WAIT_PAGE:
+            self.pageCursor.update()
+            return
+        if self.status == self.CHARPTR.ENDOFLINE:
+            self.endCursor.update()
+            return
 
-        self.tick += 1
-        '''
 
-    def draw(self, screen):
+        if len(self.buf) >= self.LIMIT.CHAR_COUNT:
+            self.buf = ""
+            self.surfs.append(self.font_surface(self.buf))
+
+        if len(self.surfs) >= self.LIMIT.LINE_COUNT:
+            self.surfs.popleft()
+
+        if len(self.buf) >= len(self.text) or self.ptr >= len(self.text):
+            self.prepare_nextpage()
+            return
+
+
+        ch = self.text[self.ptr]
+
+        if ch == "/":
+            self.buf = ""
+            self.surfs.append(self.font_surface(self.buf))
+            self.ptr += 1
+            self.status = self.CHARPTR.WAIT_LINE
+            return
+
+        if ch == "%":
+            self.prepare_nextpage()
+            return
+
+        if ch == "#":
+            pass
+
+        if ch == "$":
+            pass
+
+        self.buf += self.text[self.ptr]
+        self.surfs[len(self.surfs) - 1] = self.font_surface(self.buf) 
+        self.ptr += 1
+
+
+
+    def draw(self, screen: pygame.Surface):
         super().draw(screen)
-        self.cursor.draw(screen)
 
-        '''
-        # 現在表示しているページのcur_posまでの文字を描画
-        for i in range(self.cur_pos):
-            ch = self.text[self.cur_page*self.MAX_CHARS_PER_PAGE+i]
-            if ch == "/" or ch == "%" or ch == "$": continue  # 制御文字は表示しない
-            dx = self.text_rect[0] + MessageEngine.FONT_WIDTH * (i % self.MAX_CHARS_PER_LINE)
-            dy = self.text_rect[1] + (self.LINE_HEIGHT+MessageEngine.FONT_HEIGHT) * (i // self.MAX_CHARS_PER_LINE)
-            self.msg_engine.draw_character(screen, (dx,dy), ch)
-        # 最後のページでない場合は▼を表示
-        if (not self.hide_flag) and self.next_flag:
-            if self.frame / self.animcycle % 2 == 0:
-                dx = self.text_rect[0] + (self.MAX_CHARS_PER_LINE/2) * MessageEngine.FONT_WIDTH - MessageEngine.FONT_WIDTH/2
-                dy = self.text_rect[1] + (self.LINE_HEIGHT + MessageEngine.FONT_HEIGHT) * 3
-                screen.blit(self.cursor, (dx,dy))
-        '''
+        if self.status == self.CHARPTR.WAIT_LINE:
+            self.lineCursor.draw(screen)
+        if self.status == self.CHARPTR.WAIT_PAGE:
+            self.pageCursor.draw(screen)
+        if self.status == self.CHARPTR.ENDOFLINE:
+            self.endCursor.draw(screen)
 
-    def next(self):
-        """メッセージを先に進める"""
-        # 現在のページが最後のページだったらウィンドウを閉じる
-        if self.hide_flag:
-            self.hide()
-            return False
-        # ▼が表示されてれば次のページへ
-        if self.next_flag:
-            self.cur_page += 1
-            self.cur_pos = 0
-            self.next_flag = False
-            return True
+        for i in range(len(self.surfs)):
+            screen.blit(self.surfs[i], (self.rect.left + 10, self.rect.top + 10 + (i * self.font_height) ) )
+        
 
+    def handler(self, event: pygame.event):
+        if event.type == KEYUP:
+            if event.key == K_RETURN:
+                if self.status == self.CHARPTR.WAIT_LINE:
+                    self.status = self.CHARPTR.IS_ACTIVE
+                if self.status == self.CHARPTR.WAIT_PAGE:
+                    self.surfs.clear()
+                    self.surfs.append(self.font_surface(self.buf))     
+                    self.status = self.CHARPTR.IS_ACTIVE
+    
 
-class CaptionWindow(BaseWindow):
+    def key_handler(self, pressed_keys: List[bool]):
 
-    EDGE_WIDTH = 2
-
-    def __init__(self, rect: pygame.Rect, caption: str):
-        linewidth: int = 0
-
-        self.surf = pygame.Surface( (rect.width, rect.height) )
-        self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect()
-
-        self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)
-        pygame.draw.rect(self.surf, Color('white'), self.rect, linewidth)
-        pygame.draw.rect(self.surf, Color('black'), self.inner_rect, linewidth)
-        self.rect = rect
-
-        self._caption = g.enfont.render(f"{caption}", False, Color('white') )
-
-    def update(self):
-        pass
-
-    def draw(self, screen):
-        screen.blit(self.surf, (self.rect.left, self.rect.top) )
-        screen.blit(self._caption, (self.rect.left + 10, self.rect.top + 10) )
-
-    def handler(self, event):
-        pass
-
-
-class PlayerStatus(BaseWindow):
-
-    _rows: list[pygame.Surface] = []
-
-    def __init__(self, rect: pygame.Rect):
-        super().__init__(rect)
-
-        txt = g.enfont.render(f"＃   {'ＣＨＡＲＡＣＴＥＲ　ＮＡＭＥ':<30} {'ＣＬＡＳＳ':>20} {'ＡＣ':>10} {'ＨＩＴＳ':>10} {'ＳＴＡＴＵＳ':>10}",
-                                   False, Color('white') )
-        self._rows.append( txt )
-        txt = g.enfont.render(f"{'１':<1}   {'ａａａａａａａ':<50} {'Ｎ－ＦＩＧ':>20} {'－１０':>10} {'５５５':>10} {'５５５':>15}",
-                                   False, Color('white') )
-        self._rows.append( txt )
-
-    def update(self):
-        pass
-
-    def draw(self, screen):
-        super().draw(screen)
-        for i in range( len(self._rows) ):
-            screen.blit(self._rows[i], (20, 465 + (i * 20)) )
-
-
-class MenuStatus(BaseWindow):
-
-    _rows: list[pygame.Surface] = []
-
-    def __init__(self, rect: pygame.Rect):
-        super().__init__(rect)
-
-        txt = g.enfont.render(f"{'Ｃ）ＡＭＰ':>15} {'Ｓ）ＴＡＴＵＳ':>15} {'Ｉ）ＮＳＰＥＣＴ':>15} {'Ｐ）ＩＣＫ':>15} {'Ｕ）ＳＥ':>15} {'Ｏ）ＦＦ':>15}",
-                                   False, Color('white') )
-        self._rows.append( txt )
-
-    def update(self):
-        pass
-
-    def draw(self, screen):
-        super().draw(screen)
-        for i in range( len(self._rows) ):
-            screen.blit(self._rows[i], (0, 10)) 
-
-
-class Camp():
-
-    _caption: CaptionWindow
-    _selectmenu: BaseWindow
-    _rows: list[pygame.Surface] = []
-
-    def __init__(self):
-        # super().__init__()
-
-        self._caption = CaptionWindow( pygame.Rect( (260, 0), (70, 30) ), "ＣＡＭＰ" )
-        self._selectmenu = BaseWindow( pygame.Rect( (225, 200), (150, 150) ) )
-
-        txt = g.enfont.render(f"{'＃）ＩＮＳＰＥＣＴ'}", False, Color('white') )
-        self._rows.append( txt )
-        txt = g.enfont.render(f"{'Ｒ）ＥＯＲＤＥＲ'}", False, Color('white') )
-        self._rows.append( txt )
-        txt = g.enfont.render(f"{'Ｅ）ＱＵＩＰ'}", False, Color('white') )
-        self._rows.append( txt )
-        txt = g.enfont.render(f"{'Ｌ⏎ＥＡＶＥ'}", False, Color('white') )
-        self._rows.append( txt )
-
-    def update(self):
-        pass
-
-    def draw(self, screen):
-        # super().draw(screen)
-        self._caption.draw(screen)
-        self._selectmenu.draw(screen)
-
-        for i in range( len(self._rows) ):
-            screen.blit(self._rows[i], (250, 220 + (i * 20)) ) 
+        if pressed_keys[pygame.K_RETURN]:
+            if self.status == self.CHARPTR.WAIT_LINE:
+                self.status = self.CHARPTR.IS_ACTIVE
+            if self.status == self.CHARPTR.WAIT_PAGE:
+                self.surfs.clear()
+                self.surfs.append(self.font_surface(self.buf))     
+                self.status = self.CHARPTR.IS_ACTIVE
 
 
 
@@ -284,19 +285,15 @@ class Camp():
 class GameWindow():
     
     _keydict = {
-            pygame.K_c: {"func" : Camp, "visible": False},
-            pygame.K_s: {"func" : PlayerStatus, "visible": False},
+            pygame.K_c: {"func" : None, "visible": False},
+            pygame.K_s: {"func" : None, "visible": False},
             pygame.K_i: {"func" : None, "visible": False},
             pygame.K_p: {"func" : None, "visible": False},
             pygame.K_u: {"func" : MessageWindow, "visible": True},
-            pygame.K_o: {"func" : MenuStatus, "visible": False},
+            pygame.K_o: {"func" : None, "visible": False},
     }
 
     def __init__(self):
-        self._keydict[K_c]["func"] = Camp()
-        self._keydict[K_o]["func"] = MenuStatus( pygame.Rect( (0, 0), (600, 30) ) )
-        self._keydict[K_s]["func"] = PlayerStatus( pygame.Rect( (0, 450), (600, 150) ) )
-
         self._keydict[K_u]["func"] = MessageWindow( pygame.Rect( (0, 450), (600, 150) ) )
 
     def draw(self, screen):
@@ -311,13 +308,18 @@ class GameWindow():
                 if _cont["visible"]:
                     _cont["func"].update()
 
-    def handler(self, pressed_keys):
+    def handler(self, event: pygame.event) -> None:
+        for _key, _cont in self._keydict.items():
+            if _cont["func"] != None:
+                if _cont["visible"]:
+                    _cont["func"].handler(event)
 
-        if pressed_keys[pygame.K_RETURN]:
-            if self._keydict[K_c]["visible"]:
-                self._keydict[K_c]["visible"] = not self._keydict[K_c]["visible"]
-                self._keydict[K_o]["visible"] = not self._keydict[K_o]["visible"]
-                
+    def key_handler(self, pressed_keys: List[bool]):
+        for _key, _cont in self._keydict.items():
+            if _cont["func"] != None:
+                if _cont["visible"]:
+                    _cont["func"].handler(pressed_keys)
+
         if pressed_keys[K_c]:
             self._keydict[K_c]["visible"] = not self._keydict[K_c]["visible"]
             self._keydict[K_o]["visible"] = not self._keydict[K_o]["visible"]

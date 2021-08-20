@@ -1,0 +1,44 @@
+{
+
+"page1":{
+    "title": "1111",
+    "image": "1111.jpg",
+    "character": "person1",
+    "text": "あいうえおかきくけこさしすせとたちつてとなにぬねのはひふへほまみむめも%",
+    "next": "page2"
+},
+"page2":{
+    "title": "2222",
+    "image": "2222.jpg",
+    "character": "person1",
+    "text": "いいいいいいい...#",
+    "next": "page3",
+    "select":{
+        "case1": "2222",
+        "case2": "2222",
+        "case3": "2222",
+    }
+},
+"page3":{
+    "title": "3333",
+    "image": "3333.jpg",
+    "character": "person1",
+    "text": "うううううううううう",
+    "next": "page5"
+},
+"page4":{
+    "title": "4444",
+    "image": "4444.jpg",
+    "character": "person1",
+    "text": "ええええええええええ",
+    "next": "page5"
+},
+"page5":{
+    "title": "5555",
+    "image": "5555.jpg",
+    "character": "person1",
+    "text": "おおおおおおおおおおお",
+    "next": "page1"
+}
+
+}

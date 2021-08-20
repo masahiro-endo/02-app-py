@@ -45,7 +45,7 @@ class BaseWindow:
         pass
 
 
-class PageCursor():
+class LineCursor():
 
     def __init__(self, x, y, color):
         self.x = x
@@ -62,6 +62,31 @@ class PageCursor():
         r = abs( 5 * math.sin(math.radians(self.theta)) )
         pygame.draw.polygon(screen, self.color, 
                 ([self.x - r, self.y], [self.x + r, self.y], [self.x, self.y + 12]) )
+
+
+class PageCursor():
+
+    def __init__(self, x, y, color):
+        self.x = x
+        self.y = y
+        self.color = color
+
+    def update(self):
+        pass
+
+    def draw(self, screen):
+
+        pygame.draw.polygon(screen, self.color, 
+                ( [self.x, self.y], 
+                  [self.x + 10, self.y], 
+                  [self.x + 10, self.y + 10], 
+                  [self.x + 5, self.y + 10], 
+                  [self.x + 5, self.y + 20], 
+                  [self.x, self.y + 20]) )
+        pygame.draw.polygon(screen, self.color, 
+                ( [self.x + 7, self.y + 12], 
+                  [self.x + 10, self.y + 12], 
+                  [self.x + 7, self.y + 20]) )
 
 
 class MessageWindow(BaseWindow):
@@ -87,7 +112,7 @@ class MessageWindow(BaseWindow):
         self.cur_pos = 0  # 現在ページで表示した最大文字数
         self.next_flag = False  # 次ページがあるか？
         self.hide_flag = False  # 次のキー入力でウィンドウを消すか？
-        self.cursor = PageCursor(rect.left + (rect.width // 2), rect.top + (rect.height - 20), Color("white"))
+        self.cursor = LineCursor(rect.left + (rect.width // 2), rect.top + (rect.height - 20), Color("white"))
         self.tick = 0
 
     def set(self, message):

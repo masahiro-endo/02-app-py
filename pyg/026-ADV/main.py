@@ -19,7 +19,6 @@ import global_value as g
 
 MAIN_SCREEN = Rect(0, 0, 800, 600)
 
-
 g.USREVENT_OOPS = pygame.USEREVENT + 1
 
 
@@ -30,10 +29,11 @@ class App:
         pygame.mixer.pre_init(buffer=128)
         pygame.mixer.init()
         pygame.init()
+        pygame.key.set_repeat()
         
         self.surfaceScreen = pygame.display.set_mode(MAIN_SCREEN.size, DOUBLEBUF | HWSURFACE)
         pygame.display.set_caption("caption")
-        g.jpfont12 = pygame.font.Font('./assets/fonts/姫明朝ともえごぜんmini.otf', 12)
+        g.jpfont = pygame.font.Font('./assets/fonts/姫明朝ともえごぜんmini.otf', 12)
         g.enfont = pygame.font.Font('./assets/fonts/ipaexg.ttf', 12)
 
         g.currentScene = deque()
@@ -58,9 +58,11 @@ class App:
                 
             for event in pygame.event.get():
                 scene.handler(event)
+                g.gamewindow.handler(event)
 
             pressed_keys = pygame.key.get_pressed()
-            g.gamewindow.handler(pressed_keys)
+
+            # g.gamewindow.key_handler(pressed_keys)
             g.gamewindow.update()
             g.gamewindow.draw(self.surfaceScreen)
 
@@ -75,7 +77,7 @@ g.running: bool
 
 g.USREVENT_OOPS: pygame.USEREVENT
 
-g.jpfont12: pygame.font
+g.jpfont: pygame.font
 g.enfont: pygame.font
 
 g.currentScene: deque[scene]
