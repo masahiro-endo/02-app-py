@@ -1,0 +1,106 @@
+import pygame as pg
+
+# Todo パス名を変更すること
+img_path = r"img\test.png"
+
+def main(img_path):
+    clock = pg.time.Clock()
+    screen = pg.display.set_mode((640, 480))
+
+    # 画像初期化
+    img_orig = pg.image.load(img_path).convert()
+    colorkey = img_orig.get_at((0,0))               # 左上を透明色にする処理
+    img_orig.set_colorkey(colorkey, pg.RLEACCEL)    # 左上を透明色にする処理
+    img_surf = img_orig.copy()
+    img_alpha = pg.Surface(img_surf.get_size(), pg.SRCALPHA)
+
+    # テキスト初期化
+    font = pg.font.SysFont(None, 64)
+    blue = pg.Color('royalblue')
+    txt_orig = font.render(u'Transparent.', True, blue)
+    txt_surf = txt_orig.copy()
+    txt_alpha = pg.Surface(txt_surf.get_size(), pg.SRCALPHA)
+
+    alpha = 0
+    isAdding = True
+
+    while True:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                return
+
+        screen.fill((30, 30, 30))
+
+        # 画像描画
+        img_alpha.fill((255, 255, 255, alpha), special_flags=pg.BLEND_RGBA_MULT)
+        img_surf = img_orig.copy()
+        img_surf.set_alpha(alpha)         # 透過処理
+        img_surf.blit(img_alpha, (0, 0))
+        screen.blit(img_surf, (10, 50))
+
+        # テキスト描画
+        txt_alpha.fill((255, 255, 255, 255 - alpha))
+        txt_surf = txt_orig.copy()
+        txt_surf.blit(txt_alpha, (0, 0), special_flags=pg.BLEND_RGBA_MULT)
+        screen.blit(txt_surf, (10, 10))
+
+        pg.display.flip()
+        clock.tick(30)
+
+        # 透明度更新
+        if isAdding:
+            alpha += 5
+        else:
+            alpha -= 5
+        if alpha <= 0 or alpha >= 255:
+            isAdding = not isAdding
+            alpha = max(min(alpha, 255), 0)
+
+if __name__ == '__main__':
+    pg.init()
+    main(img_path)
+    pg.quit()
+
+
+
+
+
+
+
+
+background = pygame.Display.set_mode()
+myimage = pygame.image.load("path/to/image.bmp").convert_alpha(background)
+
+
+
+
+
+
+
+import pygame
+
+SCREEN = pygame.Rect((0,0,480,360))
+screen = pygame.display.set_mode(SCREEN.size)
+
+screen.fill((0,0,0))
+
+#透明を有効にしたsurface
+scr =pygame.Surface((240,180),flags=pygame.SRCALPHA)
+# 半透明のfillが有効
+scr.fill((255,255,255,128))
+# ベースのsurfaceに貼り付け
+screen.blit(scr,(20,20))
+
+pygame.display.flip()
+
+is_running = True
+while is_running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            is_running = False
+
+pygame.quit()
+
+
+
+

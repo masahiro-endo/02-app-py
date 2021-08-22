@@ -5,6 +5,7 @@
     "image": "1111.jpg",
     "character": "person1",
     "text": "あいうえおかきくけこさしすせとたちつてとなにぬねのはひふへほまみむめも%",
+    "speed": "1",
     "next": "page2"
 },
 "page2":{
@@ -12,11 +13,11 @@
     "image": "2222.jpg",
     "character": "person1",
     "text": "いいいいいいい...#",
+    "speed": "2",
     "next": "page3",
     "select":{
-        "case1": "2222",
-        "case2": "2222",
-        "case3": "2222",
+        "0": {"text": "３を選ぶ", "selected": "True", "surf": "", "goto": "page3" },
+        "1": {"text": "４を選ぶ", "selected": "False", "surf": "", "goto": "page4" }
     }
 },
 "page3":{
@@ -24,6 +25,7 @@
     "image": "3333.jpg",
     "character": "person1",
     "text": "うううううううううう",
+    "speed": "3",
     "next": "page5"
 },
 "page4":{
@@ -31,6 +33,7 @@
     "image": "4444.jpg",
     "character": "person1",
     "text": "ええええええええええ",
+    "speed": "4",
     "next": "page5"
 },
 "page5":{
@@ -38,6 +41,7 @@
     "image": "5555.jpg",
     "character": "person1",
     "text": "おおおおおおおおおおお",
+    "speed": "5",
     "next": "page1"
 }
 

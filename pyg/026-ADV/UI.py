@@ -29,7 +29,7 @@ class BaseWindow:
         linewidth: int = 0
 
         self.surf = pygame.Surface( (rect.width, rect.height) )
-        self.surf.fill((255, 255, 255))
+        self.surf.fill(Color('black'))
         self.rect = self.surf.get_rect()
 
         self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)
@@ -56,12 +56,28 @@ class LineCursor():
     def update(self):
         self.theta += 10
 
-    def draw(self, screen:pygame.Surface):
+    def draw(self, screen: pygame.Surface):
         self.theta %= 360 
         r = abs( 5 * math.sin(math.radians(self.theta)) )
         pygame.draw.polygon(screen, self.color, 
                 ([self.x - r, self.y], [self.x + r, self.y], [self.x, self.y + 12]) )
 
+class SelectCursor():
+
+    def __init__(self, x: int, y: int, color: Color):
+        self.x = x
+        self.y = y
+        self.color = color
+        self.theta = 0
+
+    def update(self):
+        self.theta += 10
+
+    def draw(self, screen: pygame.Surface):
+        self.theta %= 360 
+        r = abs( 5 * math.sin(math.radians(self.theta)) )
+        pygame.draw.polygon(screen, self.color, 
+                ([self.x, self.y - r], [self.x + 12, self.y], [self.x, self.y + r]) )
 
 class PageCursor():
 
@@ -130,6 +146,7 @@ class MessageWindow(BaseWindow):
         WAIT_LINE = auto()
         WAIT_PAGE = auto()
         ENDOFLINE = auto()
+        WAIT_SELECT = auto()
 
     class LIMIT(IntEnum):
         CHAR_COUNT = 10
@@ -147,12 +164,14 @@ class MessageWindow(BaseWindow):
         self.lineCursor = LineCursor(dx, dy, Color("white"))
         self.pageCursor = PageCursor(dx, dy, Color("white"))
         self.endCursor = FontCursor(dx, dy, Color("white"))
-        self.tick = 0
+        self.selectCursor = SelectCursor(dx, dy, Color("white"))
+        self.interval = 0
 
         self.json_dict = self.read_json()
         for self.currPage in self.json_dict: break
         self.text = self.json_dict[self.currPage]["text"]
         self.next = self.json_dict[self.currPage]["next"]
+        self.speed = int(self.json_dict[self.currPage]["speed"])
 
         self.buf: str = ""
         self.ptr = 0
@@ -160,6 +179,8 @@ class MessageWindow(BaseWindow):
         self.surfs: deque[pygame.Surface] = deque()
         self.surfs.append(self.font_surface(self.buf))
         self.font_width, self.font_height = self.font_size()
+        
+        self.choices: deque[List[int, bool, pygame.Surface]] = deque()
 
         '''
         s = '123456789'
@@ -186,8 +207,10 @@ class MessageWindow(BaseWindow):
         return g.enfont.size("あ")
 
     def prepare_nextpage(self):
-        self.text = self.json_dict[self.next]["text"]
-        self.next = self.json_dict[self.next]["next"]
+        self.currPage = self.next
+        self.text = self.json_dict[self.currPage]["text"]
+        self.next = self.json_dict[self.currPage]["next"]
+        self.speed = int(self.json_dict[self.currPage]["speed"])
         self.buf = ""
 
         self.ptr = 0
@@ -195,6 +218,7 @@ class MessageWindow(BaseWindow):
 
     def update(self):
         super().update()
+        self.interval += 1
 
         if self.status == self.CHARPTR.WAIT_LINE:
             self.lineCursor.update()
@@ -205,7 +229,13 @@ class MessageWindow(BaseWindow):
         if self.status == self.CHARPTR.ENDOFLINE:
             self.endCursor.update()
             return
+        if self.status == self.CHARPTR.WAIT_SELECT:
+            self.selectCursor.update()
+            return
 
+        self.interval %= self.speed
+        if not self.interval == 0:
+            return
 
         if len(self.buf) >= self.LIMIT.CHAR_COUNT:
             self.buf = ""
@@ -217,7 +247,6 @@ class MessageWindow(BaseWindow):
         if len(self.buf) >= len(self.text) or self.ptr >= len(self.text):
             self.prepare_nextpage()
             return
-
 
         ch = self.text[self.ptr]
 
@@ -233,7 +262,11 @@ class MessageWindow(BaseWindow):
             return
 
         if ch == "#":
-            pass
+            for _id, _cont in self.json_dict[self.currPage]["select"].items():
+                self.choices.append([int(_id), bool(_cont["selected"]), self.font_surface(_cont["text"])] )
+            self.ptr += 1
+            self.status = self.CHARPTR.WAIT_SELECT
+            return
 
         if ch == "$":
             pass
@@ -241,7 +274,6 @@ class MessageWindow(BaseWindow):
         self.buf += self.text[self.ptr]
         self.surfs[len(self.surfs) - 1] = self.font_surface(self.buf) 
         self.ptr += 1
-
 
 
     def draw(self, screen: pygame.Surface):
@@ -253,6 +285,8 @@ class MessageWindow(BaseWindow):
             self.pageCursor.draw(screen)
         if self.status == self.CHARPTR.ENDOFLINE:
             self.endCursor.draw(screen)
+        if self.status == self.CHARPTR.WAIT_SELECT:
+            self.selectCursor.draw(screen)
 
         for i in range(len(self.surfs)):
             screen.blit(self.surfs[i], (self.rect.left + 10, self.rect.top + 10 + (i * self.font_height) ) )
@@ -267,7 +301,22 @@ class MessageWindow(BaseWindow):
                     self.surfs.clear()
                     self.surfs.append(self.font_surface(self.buf))     
                     self.status = self.CHARPTR.IS_ACTIVE
-    
+
+            if self.status == self.CHARPTR.WAIT_SELECT:
+                if event.key == K_UP:
+                    for _id, _sel, _surf in self.choices:
+                        if _sel == True:
+                            self.choices[_id][1] = False
+                            self.choices[0 if _id - 1 < 0 else _id - 1][1] = True
+                            break
+
+                if event.key == K_DOWN:
+                    for _id, _sel, _surf in reversed(self.choices):
+                        if _sel == True:
+                            self.choices[_id][1] = False
+                            self.choices[ len(self.choices) - 1 if _id + 1 >= len(self.choices) else _id + 1][1] = True
+                            break
+
 
     def key_handler(self, pressed_keys: List[bool]):
 
