@@ -38,7 +38,7 @@ class App:
         g.sceneStack = deque()
         g.sceneStack.appendleft(scene.Demo())
 
-        g.UIfont = UI.UIfont(20)
+        g.UIfont = UI.UIfonts(20)
         g.term = UI.TerminalWindow()
         
         g.running = True
@@ -73,7 +73,7 @@ class App:
 
 g.running: bool
 g.USREVENT_OOPS: pg.USEREVENT
-g.currentScene: deque[scene]
+g.sceneStack: deque[scene.BaseScene]
 
 
 

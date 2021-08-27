@@ -2,16 +2,12 @@
 from collections import OrderedDict, deque
 import typing
 import pygame
-from pygame import rect
-from pygame import draw
 from pygame.locals import *
 import global_value as g
 from enum import IntEnum, auto
-import math
 import json
-from typing import Any, Dict, List, Text, Tuple
-from enum import Enum
-import const
+from typing import Any, Dict
+from enum import IntEnum
 import UIcontrol
 
 
@@ -25,14 +21,14 @@ class BaseWindow:
     def __init__(self, rect: pygame.Rect):
         linewidth: int = 0
 
-        self.surf = pygame.Surface( (rect.width, rect.height) )
+        self.surf: pygame.Surface = pygame.Surface( (rect.width, rect.height) )
         self.surf.fill(Color('black'))
-        self.rect = self.surf.get_rect()
+        self.rect = self.surf.get_rect(topleft=(rect.top,rect.left))
 
         self.inner_rect = self.rect.inflate(-self.Style.BORDER * 2, -self.Style.BORDER * 2)
         pygame.draw.rect(self.surf, Color('white'), self.rect, linewidth)
         pygame.draw.rect(self.surf, Color('black'), self.inner_rect, linewidth)
-        self.rect = rect
+        # self.rect = rect
 
     def update(self):
         pass
@@ -96,7 +92,7 @@ class SelectWindow():
 
     def init_selectitems(self, dict: Dict[str, Dict[str,Any]]):
         self.dict = dict
-        for x, sl in dict:
+        for x, sl in dict.items():
             if __debug__:
                 print(f'{x}:{sl}')
             sl["surf"] = None
@@ -105,7 +101,7 @@ class SelectWindow():
                 self.sid = int(x)
 
     def update(self):
-        for x, sl in self.dict:
+        for x, sl in self.dict.items():
             if sl["selected"] == 'True':
                 self._cur[self.status]["cursor"].update(self.rect.top + (self.sid * g.UIfont.HEIGHT) + (g.UIfont.HEIGHT // 2))
         return
@@ -113,7 +109,7 @@ class SelectWindow():
     def draw(self, screen: pygame.Surface):
         self._cur[self.status]["cursor"].draw(screen)
 
-        for x, sl in self.dict:
+        for x, sl in self.dict.items():
             dx: int = self.rect.left
             dy: int = self.rect.top + (int(x) * g.UIfont.HEIGHT + self.Style.LINE_SPACE)
             screen.blit(sl["surf"], (dx, dy))
@@ -171,7 +167,7 @@ class MessageWindow():
         
         self.status = CHARPTR.IS_ACTIVE
 
-    def init_scenario(self, filename: str)->typing.Any:
+    def init_scenario(self, filename: str):
         self.json_dict = self.read_json(filename)
 
         for self.currPage in self.json_dict: break
@@ -179,7 +175,7 @@ class MessageWindow():
         self.status = CHARPTR.IS_ACTIVE
 
 
-    def read_json(self, filename: str)->typing.Any:
+    def read_json(self, filename: str) -> typing.Any:
         f = open(f'./assets/events/{filename}.json', 'r', encoding="utf-8")
         json_dict = json.load(f, object_pairs_hook=OrderedDict)
 
@@ -261,7 +257,7 @@ class MessageWindow():
             pass
 
         self.buf += self.text[self.ptr]
-        self.surfs[len(self.surfs) - 1] = g.UIfont.render(self.buf) 
+        self.surfs[-1] = g.UIfont.render(self.buf) 
         self.ptr += 1
 
 
@@ -301,7 +297,7 @@ class WindowAssign():
     IMAGE = pygame.Rect((100, 100), (100, 150))
 
 
-class UIfont():
+class UIfonts():
     
     def __init__(self, size: int):
         self.FONT: pygame.font = pygame.font.Font('./assets/fonts/ipaexg.ttf', size)
@@ -316,7 +312,7 @@ class UIfont():
     def size(self, ) -> Any:
         return self.HEIGHT, self.WIDTH
 
-g.UIfont: UIfont
+g.UIfont: UIfonts
 
 
 class TerminalWindow():
