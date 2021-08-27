@@ -1,88 +1,79 @@
 #!/usr/bin/env python
-import pygame
+from typing import Any
+import pygame as pg
 from pygame.locals import *
 import os
-import random
 import sys
 from collections import deque
-os.chdir(os.path.dirname(__file__))
-
-sys.path.append(os.path.dirname(__file__))
-import control
 import scene
 import UI
-import actor
-import const
 import global_value as g
+os.chdir(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(__file__))
 
 
 
-MAIN_SCREEN = Rect(0, 0, 800, 600)
+class DisplayResolution():
+    VGA = Rect(0, 0, 640, 480)
+    SVGA = Rect(0, 0, 800, 600)
+    XGA = Rect(0, 0, 1024, 768)
 
-g.USREVENT_OOPS = pygame.USEREVENT + 1
+
+g.USREVENT_OOPS = pg.USEREVENT + 1
 
 
 class App:
 
     def __init__(self):
-        pygame.mixer.quit()
-        pygame.mixer.pre_init(buffer=128)
-        pygame.mixer.init()
-        pygame.init()
-        pygame.key.set_repeat()
+        pg.mixer.quit()
+        pg.mixer.pre_init(buffer=128)
+        pg.mixer.init()
+
+        pg.init()
+        pg.key.set_repeat()
         
-        self.surfaceScreen = pygame.display.set_mode(MAIN_SCREEN.size, DOUBLEBUF | HWSURFACE)
-        pygame.display.set_caption("caption")
-        g.jpfont = pygame.font.Font('./assets/fonts/姫明朝ともえごぜんmini.otf', 12)
-        g.enfont = pygame.font.Font('./assets/fonts/ipaexg.ttf', 12)
+        self.mainScreen = pg.display.set_mode(DisplayResolution.VGA.size, DOUBLEBUF | HWSURFACE)
+        pg.display.set_caption("caption")
 
-        g.currentScene = deque()
-        g.currentScene.appendleft(scene.Demo())
+        g.sceneStack = deque()
+        g.sceneStack.appendleft(scene.Demo())
 
-        g.gamewindow = UI.GameWindow()
+        g.UIfont = UI.UIfont(20)
+        g.term = UI.TerminalWindow()
         
         g.running = True
         self.mainloop()
 
     def mainloop(self):
 
-        clock = pygame.time.Clock()
+        clock = pg.time.Clock()
         while g.running:
             clock.tick(20)
-
-            for scene in reversed(g.currentScene):
+            
+            events: pg.Eventlist = pg.event.get()
+            scene: Any
+            for scene in reversed(g.sceneStack):
                 if scene is None:
                     continue
                 scene.update()
-                scene.draw(self.surfaceScreen)
-                
-            for event in pygame.event.get():
-                scene.handler(event)
-                g.gamewindow.handler(event)
+                scene.draw(self.mainScreen)
+                for event in events:
+                    scene.handler(event)
 
-            pressed_keys = pygame.key.get_pressed()
+            g.term.update()
+            g.term.draw(self.mainScreen)
+            for event in events:
+                g.term.handler(event)
 
-            # g.gamewindow.key_handler(pressed_keys)
-            g.gamewindow.update()
-            g.gamewindow.draw(self.surfaceScreen)
+            pg.display.update()
 
-            pygame.display.update()
-
-
-        pygame.mixer.music.stop()
-        pygame.mixer.quit()
+        pg.mixer.music.stop()
+        pg.mixer.quit()
 
 
 g.running: bool
-
-g.USREVENT_OOPS: pygame.USEREVENT
-
-g.jpfont: pygame.font
-g.enfont: pygame.font
-
+g.USREVENT_OOPS: pg.USEREVENT
 g.currentScene: deque[scene]
-
-
 
 
 

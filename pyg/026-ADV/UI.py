@@ -5,25 +5,22 @@ import pygame
 from pygame import rect
 from pygame import draw
 from pygame.locals import *
-import codecs
-import os
-import random
-import struct
-import sys
-import control
 import global_value as g
 from enum import IntEnum, auto
 import math
 import json
-from typing import Any, List, Text, Tuple
-
+from typing import Any, Dict, List, Text, Tuple
+from enum import Enum
+import const
+import UIcontrol
 
 
 
 
 class BaseWindow:
 
-    EDGE_WIDTH = 2
+    class Style():
+        BORDER = 2
 
     def __init__(self, rect: pygame.Rect):
         linewidth: int = 0
@@ -32,7 +29,7 @@ class BaseWindow:
         self.surf.fill(Color('black'))
         self.rect = self.surf.get_rect()
 
-        self.inner_rect = self.rect.inflate(-self.EDGE_WIDTH * 2, -self.EDGE_WIDTH * 2)
+        self.inner_rect = self.rect.inflate(-self.Style.BORDER * 2, -self.Style.BORDER * 2)
         pygame.draw.rect(self.surf, Color('white'), self.rect, linewidth)
         pygame.draw.rect(self.surf, Color('black'), self.inner_rect, linewidth)
         self.rect = rect
@@ -44,154 +41,146 @@ class BaseWindow:
         screen.blit(self.surf, (self.rect.left, self.rect.top) )
 
 
-
-class LineCursor():
-
-    def __init__(self, x: int, y: int, color: Color):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.theta = 0
-
-    def update(self):
-        self.theta += 10
-
-    def draw(self, screen: pygame.Surface):
-        self.theta %= 360 
-        r = abs( 5 * math.sin(math.radians(self.theta)) )
-        pygame.draw.polygon(screen, self.color, 
-                ([self.x - r, self.y], [self.x + r, self.y], [self.x, self.y + 12]) )
-
-class SelectCursor():
-
-    def __init__(self, x: int, y: int, color: Color):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.theta = 0
-
-    def update(self):
-        self.theta += 10
-
-    def draw(self, screen: pygame.Surface):
-        self.theta %= 360 
-        r = abs( 5 * math.sin(math.radians(self.theta)) )
-        pygame.draw.polygon(screen, self.color, 
-                ([self.x, self.y - r], [self.x + 12, self.y], [self.x, self.y + r]) )
-
-class PageCursor():
-
-    def __init__(self, x: int, y: int, color: Color):
-        self.x = x
-        self.y = y
-        self.color = color
+class ImageWindow():
+    def __init__(self, rect: pygame.Rect, dict:Dict[str,str]):
+        self.x = rect.left
+        self.y = rect.top
+        self.dict = dict
+        print(f'./assets/images/bg/{self.dict["image"]}')
+        self.image = pygame.image.load(f'./assets/images/bg/{self.dict["image"]}')
+        self.rect = self.image.get_rect()
+        self.image = pygame.transform.scale(self.image, (self.rect.width // 3, self.rect.height // 3))
+        self.image = self.image.convert()
+        self.image.set_colorkey(-1, RLEACCEL)
+        self.rect = self.image.get_rect()
+        self.rect.center = (320,240)
+        
         self.trans = 0
 
-        self.surf = pygame.Surface( (10, 15), flags=pygame.SRCALPHA)
-        self.surf.set_colorkey(Color('black'))
-        self.surf.fill(Color('black'))
-        self.rect = self.surf.get_rect()
-
-        pygame.draw.polygon(self.surf, self.color, 
-                ( [self.rect.x, self.rect.y], 
-                  [self.rect.x + 10, self.rect.y], 
-                  [self.rect.x + 10, self.rect.y + 10], 
-                  [self.rect.x + 5, self.rect.y + 10], 
-                  [self.rect.x + 5, self.rect.y + 15], 
-                  [self.rect.x, self.rect.y + 15]) )
-        pygame.draw.polygon(self.surf, self.color, 
-                ( [self.rect.x + 7, self.rect.y + 12], 
-                  [self.rect.x + 10, self.rect.y + 12], 
-                  [self.rect.x + 7, self.rect.y + 15]) )
-
     def update(self):
-        self.trans += 10
+        self.trans += 1
+        self.trans = self.trans if self.trans < 250 else 250
 
     def draw(self, screen: pygame.Surface):
-        self.trans %= 250
-        self.surf.set_alpha(self.trans)
-        screen.blit(self.surf, (self.x, self.y) )
+        self.image.set_alpha(self.trans)
+        screen.blit(self.image, (self.x, self.y) )
 
 
-class FontCursor():
+class CHARPTR(IntEnum):
+    IS_ACTIVE = 0
+    WAIT_LINE = auto()
+    WAIT_PAGE = auto()
+    ENDOFLINE = auto()
+    WAIT_SELECT = auto()
 
-    def __init__(self, x: int, y: int, color: Color):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.trans = 0
 
-        self.font: pygame.Surface = g.enfont.render(f"{'ＰＲＥＳＳ　ＥＮＴＥＲ　ＫＥＹ':<30}", False, Color('white') )
-        self.rect: pygame.Rect = self.font.get_rect()
-        self.surf = pygame.Surface( (self.rect.width, self.rect.height), flags=pygame.SRCALPHA)
-        self.surf.set_colorkey(Color('black'))
-        self.surf.fill(Color('black'))
-        self.surf.blit(self.font, (self.rect.left, self.rect.top) )
+class SelectWindow():
 
+    class Style():
+        LINE_SPACE = 5
+
+    _cur: Dict[CHARPTR, Dict[str, Any]] = {
+        CHARPTR.WAIT_SELECT: {"cursor" : UIcontrol.SelectCursor},
+    }
+
+    def __init__(self, rect: pygame.Rect, dict: Dict[str,Dict[str,Any]]):
+        self.rect = rect
+        dx = self.rect.left
+        dy = self.rect.top
+        self.selectCursor = UIcontrol.SelectCursor(dx, dy, Color("white"))
+
+        self.init_selectitems(dict)
+        self.sid: int = 0
+        
+        self.status = CHARPTR.WAIT_SELECT
+
+    def init_selectitems(self, dict: Dict[str, Dict[str,Any]]):
+        self.dict = dict
+        for x, sl in dict:
+            if __debug__:
+                print(f'{x}:{sl}')
+            sl["surf"] = None
+            sl["surf"] = g.UIfont.render(sl["text"])
+            if sl["selected"] == 'True':
+                self.sid = int(x)
 
     def update(self):
-        self.trans += 10
+        for x, sl in self.dict:
+            if sl["selected"] == 'True':
+                self._cur[self.status]["cursor"].update(self.rect.top + (self.sid * g.UIfont.HEIGHT) + (g.UIfont.HEIGHT // 2))
+        return
 
     def draw(self, screen: pygame.Surface):
-        self.trans %= 250
-        self.surf.set_alpha(self.trans)
-        screen.blit(self.surf, (self.x, self.y) )
+        self._cur[self.status]["cursor"].draw(screen)
+
+        for x, sl in self.dict:
+            dx: int = self.rect.left
+            dy: int = self.rect.top + (int(x) * g.UIfont.HEIGHT + self.Style.LINE_SPACE)
+            screen.blit(sl["surf"], (dx, dy))
+        
+    def handler(self, event: pygame.event):
+        if event.type == KEYUP:
+            if event.key == K_RETURN:
+                if self.status == CHARPTR.WAIT_SELECT:
+                    pass
+ 
+            if self.status == CHARPTR.WAIT_SELECT:
+                if event.key == K_UP:
+                    self.sid -= 1
+                    self.sid = 0 if self.sid < 0 else self.sid
+
+                if event.key == K_DOWN:
+                    self.sid += 1
+                    self.sid = len(self.dict) - 1 if self.sid >= len(self.dict) else self.sid
 
 
-
-class MessageWindow(BaseWindow):
-
-    class CHARPTR(IntEnum):
-        IS_ACTIVE = 0
-        WAIT_LINE = auto()
-        WAIT_PAGE = auto()
-        ENDOFLINE = auto()
-        WAIT_SELECT = auto()
+class MessageWindow():
 
     class LIMIT(IntEnum):
         CHAR_COUNT = 10
         LINE_COUNT = 4
         PAGE_COUNT = 999
 
-    font_width: int
-    font_height: int
+    _subwnd: Dict[str, Any] = {
+            'select': SelectWindow,
+            'image': ImageWindow,
+    }
+    _cur: Dict[CHARPTR, Dict[str, Any]] = {
+            CHARPTR.IS_ACTIVE: {"cursor" : None},
+            CHARPTR.WAIT_LINE: {"cursor" : UIcontrol.LineCursor},
+            CHARPTR.WAIT_PAGE: {"cursor" : UIcontrol.PageCursor},
+            CHARPTR.ENDOFLINE: {"cursor" : UIcontrol.FontCursor},
+            CHARPTR.WAIT_SELECT: {"cursor" : _subwnd['select']},
+    }
 
     def __init__(self, rect: pygame.Rect):
-        super().__init__(rect)
-
+        self.rect = rect
         dx = rect.left + (rect.width // 2)
         dy = rect.top + (rect.height - 20)
-        self.lineCursor = LineCursor(dx, dy, Color("white"))
-        self.pageCursor = PageCursor(dx, dy, Color("white"))
-        self.endCursor = FontCursor(dx, dy, Color("white"))
-        self.selectCursor = SelectCursor(dx, dy, Color("white"))
+        self._cur[CHARPTR.WAIT_LINE]["cursor"] = UIcontrol.LineCursor(dx, dy, Color("white"))
+        self._cur[CHARPTR.WAIT_PAGE]["cursor"] = UIcontrol.PageCursor(dx, dy, Color("white"))
+        self._cur[CHARPTR.ENDOFLINE]["cursor"] = UIcontrol.FontCursor(dx, dy, Color("white"))
         self.interval = 0
 
-        self.json_dict = self.read_json()
-        for self.currPage in self.json_dict: break
-        self.text = self.json_dict[self.currPage]["text"]
-        self.next = self.json_dict[self.currPage]["next"]
-        self.speed = int(self.json_dict[self.currPage]["speed"])
-
-        self.buf: str = ""
-        self.ptr = 0
-
         self.surfs: deque[pygame.Surface] = deque()
-        self.surfs.append(self.font_surface(self.buf))
-        self.font_width, self.font_height = self.font_size()
+
+        self.buf = ""
+        self.ptr = 0
+        self.init_scenario("scenario1")
+        self._subwnd['image'] = ImageWindow(WindowAssign.IMAGE, self.json_dict[self.currPage] )
         
-        self.choices: deque[List[int, bool, pygame.Surface]] = deque()
+        self.status = CHARPTR.IS_ACTIVE
 
-        '''
-        s = '123456789'
-        v = [s[i: i+3] for i in range(0, len(s), 3)]
-        # ['123', '456', '789']
-        '''
-        self.status = self.CHARPTR.IS_ACTIVE
+    def init_scenario(self, filename: str)->typing.Any:
+        self.json_dict = self.read_json(filename)
+
+        for self.currPage in self.json_dict: break
+        self.init_page(self.currPage)
+        self.status = CHARPTR.IS_ACTIVE
 
 
-    def read_json(self)->typing.Any:
-        f = open('./assets/events/scenario1.json', 'r', encoding="utf-8")
+    def read_json(self, filename: str)->typing.Any:
+        f = open(f'./assets/events/{filename}.json', 'r', encoding="utf-8")
         json_dict = json.load(f, object_pairs_hook=OrderedDict)
 
         if __debug__:
@@ -200,37 +189,37 @@ class MessageWindow(BaseWindow):
 
         return json_dict
 
-    def font_surface(self, buf: str) -> pygame.Surface:
-        return g.enfont.render(f"{buf}", False, Color("white"))
+    def init_page(self, currPage: str):
+        self.text = self.json_dict[currPage]["text"]
+        self.next = self.json_dict[currPage]["next"]
+        self.speed = int(self.json_dict[currPage]["speed"])
 
-    def font_size(self) -> Tuple[int, int]:
-        return g.enfont.size("あ")
+        self.surfs.clear()
+        self.surfs.append(g.UIfont.render(self.buf))
 
-    def prepare_nextpage(self):
-        self.currPage = self.next
-        self.text = self.json_dict[self.currPage]["text"]
-        self.next = self.json_dict[self.currPage]["next"]
-        self.speed = int(self.json_dict[self.currPage]["speed"])
         self.buf = ""
-
         self.ptr = 0
-        self.status = self.CHARPTR.WAIT_PAGE
+
+    def update_selectvalue(self):
+        _sid = str(self._subwnd['select'].sid)
+        for x, sl in self.json_dict[self.currPage]["select"].items():
+            if _sid == x:
+                sl["selected"] = 'True'
+                if "page" in sl["value"]:
+                    self.init_page(sl["value"])
+                elif "scenario" in sl["value"]:
+                    self.init_scenario(sl["value"])
+                else:
+                    pass
+            else:
+                sl["selected"] = 'False'
 
     def update(self):
-        super().update()
+        self._subwnd['image'].update()
         self.interval += 1
-
-        if self.status == self.CHARPTR.WAIT_LINE:
-            self.lineCursor.update()
-            return
-        if self.status == self.CHARPTR.WAIT_PAGE:
-            self.pageCursor.update()
-            return
-        if self.status == self.CHARPTR.ENDOFLINE:
-            self.endCursor.update()
-            return
-        if self.status == self.CHARPTR.WAIT_SELECT:
-            self.selectCursor.update()
+        
+        if not self._cur[self.status]["cursor"] == None:
+            self._cur[self.status]["cursor"].update()
             return
 
         self.interval %= self.speed
@@ -239,101 +228,100 @@ class MessageWindow(BaseWindow):
 
         if len(self.buf) >= self.LIMIT.CHAR_COUNT:
             self.buf = ""
-            self.surfs.append(self.font_surface(self.buf))
+            self.surfs.append(g.UIfont.render(self.buf))
 
         if len(self.surfs) >= self.LIMIT.LINE_COUNT:
             self.surfs.popleft()
 
         if len(self.buf) >= len(self.text) or self.ptr >= len(self.text):
-            self.prepare_nextpage()
+            self.status = CHARPTR.WAIT_PAGE
             return
 
         ch = self.text[self.ptr]
 
         if ch == "/":
             self.buf = ""
-            self.surfs.append(self.font_surface(self.buf))
+            self.surfs.append(g.UIfont.render(self.buf))
             self.ptr += 1
-            self.status = self.CHARPTR.WAIT_LINE
+            self.status = CHARPTR.WAIT_LINE
             return
 
         if ch == "%":
-            self.prepare_nextpage()
+            self.status = CHARPTR.WAIT_PAGE
             return
 
         if ch == "#":
-            for _id, _cont in self.json_dict[self.currPage]["select"].items():
-                self.choices.append([int(_id), bool(_cont["selected"]), self.font_surface(_cont["text"])] )
+            self._subwnd['select'] = None
+            self._subwnd['select'] = SelectWindow(WindowAssign.SELECT, self.json_dict[self.currPage]["select"].items())
             self.ptr += 1
-            self.status = self.CHARPTR.WAIT_SELECT
+            self.status = CHARPTR.WAIT_SELECT
             return
 
         if ch == "$":
             pass
 
         self.buf += self.text[self.ptr]
-        self.surfs[len(self.surfs) - 1] = self.font_surface(self.buf) 
+        self.surfs[len(self.surfs) - 1] = g.UIfont.render(self.buf) 
         self.ptr += 1
 
 
     def draw(self, screen: pygame.Surface):
-        super().draw(screen)
+        self._subwnd['image'].draw(screen)
 
-        if self.status == self.CHARPTR.WAIT_LINE:
-            self.lineCursor.draw(screen)
-        if self.status == self.CHARPTR.WAIT_PAGE:
-            self.pageCursor.draw(screen)
-        if self.status == self.CHARPTR.ENDOFLINE:
-            self.endCursor.draw(screen)
-        if self.status == self.CHARPTR.WAIT_SELECT:
-            self.selectCursor.draw(screen)
+        if not self._cur[self.status]["cursor"] == None:
+            self._cur[self.status]["cursor"].draw(screen)
 
         for i in range(len(self.surfs)):
-            screen.blit(self.surfs[i], (self.rect.left + 10, self.rect.top + 10 + (i * self.font_height) ) )
+            dx: int = self.rect.left
+            dy: int = self.rect.top + (i * g.UIfont.HEIGHT + (i * 5))
+            screen.blit(self.surfs[i], (dx, dy))
         
-
     def handler(self, event: pygame.event):
         if event.type == KEYUP:
+            if self.status == CHARPTR.WAIT_SELECT:
+                self._subwnd['select'].handler(event)
+            
             if event.key == K_RETURN:
-                if self.status == self.CHARPTR.WAIT_LINE:
-                    self.status = self.CHARPTR.IS_ACTIVE
-                if self.status == self.CHARPTR.WAIT_PAGE:
-                    self.surfs.clear()
-                    self.surfs.append(self.font_surface(self.buf))     
-                    self.status = self.CHARPTR.IS_ACTIVE
-
-            if self.status == self.CHARPTR.WAIT_SELECT:
-                if event.key == K_UP:
-                    for _id, _sel, _surf in self.choices:
-                        if _sel == True:
-                            self.choices[_id][1] = False
-                            self.choices[0 if _id - 1 < 0 else _id - 1][1] = True
-                            break
-
-                if event.key == K_DOWN:
-                    for _id, _sel, _surf in reversed(self.choices):
-                        if _sel == True:
-                            self.choices[_id][1] = False
-                            self.choices[ len(self.choices) - 1 if _id + 1 >= len(self.choices) else _id + 1][1] = True
-                            break
+                if self.status == CHARPTR.WAIT_LINE:
+                    self.status = CHARPTR.IS_ACTIVE
+                
+                if self.status == CHARPTR.WAIT_PAGE:
+                    self.currPage = self.next
+                    self.init_page(self.currPage)
+                    self.status = CHARPTR.IS_ACTIVE
+                
+                if self.status == CHARPTR.WAIT_SELECT:
+                    self.update_selectvalue()
+                    self.status = CHARPTR.IS_ACTIVE
 
 
-    def key_handler(self, pressed_keys: List[bool]):
-
-        if pressed_keys[pygame.K_RETURN]:
-            if self.status == self.CHARPTR.WAIT_LINE:
-                self.status = self.CHARPTR.IS_ACTIVE
-            if self.status == self.CHARPTR.WAIT_PAGE:
-                self.surfs.clear()
-                self.surfs.append(self.font_surface(self.buf))     
-                self.status = self.CHARPTR.IS_ACTIVE
+class WindowAssign():
+    MESSAGE = pygame.Rect((100, 100), (200, 200))
+    SELECT = pygame.Rect((100, 200), (200, 200))
+    IMAGE = pygame.Rect((100, 100), (100, 150))
 
 
-
-
-class GameWindow():
+class UIfont():
     
-    _keydict = {
+    def __init__(self, size: int):
+        self.FONT: pygame.font = pygame.font.Font('./assets/fonts/ipaexg.ttf', size)
+        self.WIDTH, self.HEIGHT = self.FONT.size("あ")
+
+    def render(self, buf: str) -> pygame.Surface:
+        return self.create_surface(buf)
+
+    def create_surface(self, buf: str) -> pygame.Surface:
+        return self.FONT.render(f"{buf}", False, Color("white"))
+
+    def size(self, ) -> Any:
+        return self.HEIGHT, self.WIDTH
+
+g.UIfont: UIfont
+
+
+class TerminalWindow():
+    
+    _keydict: Dict[int, Dict[str,Any]] = {
             pygame.K_c: {"func" : None, "visible": False},
             pygame.K_s: {"func" : None, "visible": False},
             pygame.K_i: {"func" : None, "visible": False},
@@ -343,9 +331,9 @@ class GameWindow():
     }
 
     def __init__(self):
-        self._keydict[K_u]["func"] = MessageWindow( pygame.Rect( (0, 450), (600, 150) ) )
+        self._keydict[K_u]["func"] = MessageWindow( WindowAssign.MESSAGE )
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface):
         for _key, _cont in self._keydict.items():
             if _cont["func"] != None:
                 if _cont["visible"]:
@@ -357,35 +345,18 @@ class GameWindow():
                 if _cont["visible"]:
                     _cont["func"].update()
 
-    def handler(self, event: pygame.event) -> None:
+    def handler(self, event: pygame.event):
         for _key, _cont in self._keydict.items():
             if _cont["func"] != None:
                 if _cont["visible"]:
                     _cont["func"].handler(event)
 
-    def key_handler(self, pressed_keys: List[bool]):
-        for _key, _cont in self._keydict.items():
-            if _cont["func"] != None:
-                if _cont["visible"]:
-                    _cont["func"].handler(pressed_keys)
+        if event.type == KEYUP:
+            if event.key == K_c:
+                self._keydict[K_c]["visible"] = not self._keydict[K_c]["visible"]
+                self._keydict[K_o]["visible"] = not self._keydict[K_o]["visible"]
 
-        if pressed_keys[K_c]:
-            self._keydict[K_c]["visible"] = not self._keydict[K_c]["visible"]
-            self._keydict[K_o]["visible"] = not self._keydict[K_o]["visible"]
-
-        if pressed_keys[K_s]:
-            self._keydict[K_s]["visible"] = not self._keydict[K_s]["visible"]
-
-        if pressed_keys[K_o]:
-            '''
-            if __debug__:
-                print(f"event.key={pressed_keys}")
-            '''
-            self._keydict[pygame.K_o]["visible"] = not self._keydict[K_o]["visible"]
-
-
-
-g.gamewindow: GameWindow
+g.term: TerminalWindow
 
 
 

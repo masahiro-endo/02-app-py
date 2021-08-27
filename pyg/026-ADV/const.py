@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from enum import IntEnum, auto
- 
+
+
+
 class Direction():
     '''
     方向のクラス
@@ -9,7 +11,6 @@ class Direction():
     EAST = 1
     SOUTH = 2
     WEST = 3
-
 
 class Alignment(IntEnum):
     '''
