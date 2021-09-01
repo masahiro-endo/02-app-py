@@ -1,11 +1,14 @@
 
-
-from typing import Any
+from typing import Any, Dict
 import pygame
 from pygame.locals import *
 import sys
+
+from pygame.mixer import pause
 import global_value as g
 import threading
+import UI
+import test
 
 
 class BaseScene:
@@ -43,48 +46,78 @@ class BaseScene:
 
 class Demo(BaseScene):
 
-    def __init__(self):
-        pass
+    _subwnd: Dict[str, Any] = {
+            'image': UI.ImageWindow,
+            'message': test.AutoMessageWindow,
+    }
 
-    def pause(self):
-        self.stopevent.set()
+    def __init__(self):
+        super().__init__()
+        self.stopevent = None
+        self._subwnd['image'] = UI.ImageWindow(UI.WindowAssign.IMAGE, image='1701325i.jpg', speed=2)
+        self._subwnd['image'].effect = None
+
+    def stop(self):
+        if not self.stopevent is None:
+            self.stopevent.set()
 
     def is_stop(self) -> bool:
         return self.stopevent.is_set()
 
-    def beginSequence(self, **kwargs):
-        interval: int = kwargs.get('interval') 
+    def do_interval(self, **kwargs: Dict[str, Any]):
+        intvl: Any = kwargs.get('interval') 
         func: Any = kwargs.get('func') 
 
-
-    def sequenceBegin(self):
-        self.pause()
-        self.interval = threading.Timer(5, self.sequence1)
+        self.stop()
+        # self.interval = threading.Timer(intvl, eval(func))
+        self.interval = threading.Timer(intvl, func)
         self.stopevent = threading.Event()
         self.interval.setDaemon(True)
         self.interval.start()
+    
+    def sequence_begin(self, **kwargs: Dict[str, Any]):
+        if __debug__:
+            print(f'{"sequence"}:{"begin"}')
+
+        self._subwnd['image'].effect = UI.ImageWindow.SHOW.FADEIN
+        self.do_interval(interval=5, func=self.sequence1)
 
     def sequence1(self):
-        self.pause()
-        self.interval = threading.Timer(5, self.sequence1)
-        self.stopevent = threading.Event()
-        self.interval.setDaemon(True)
-        self.interval.start()
+        if __debug__:
+            print(f'{"sequence"}:{"1"}')
+
+        self._subwnd['image'].effect = None
+        self.do_interval(interval=5, func=self.sequence2)
 
     def sequence2(self):
+        if __debug__:
+            print(f'{"sequence"}:{"2"}')
 
-    def sequenceEnd(self):
+        self._subwnd['image'].effect = UI.ImageWindow.SHOW.FADEOUT
+        self.do_interval(interval=5, func=self.sequence_end)
+
+    def sequence_end(self):
+        if __debug__:
+            print(f'{"sequence"}:{"end"}')
+
+        self._subwnd['image'].effect = None
+        self.stop()
 
     def update(self):
         super().update()
+        for _name, _instance in self._subwnd.items():
+            if not _instance is None:
+                _instance.update()
 
     def draw(self, screen: pygame.Surface):
         super().draw(screen)
+        for _name, _instance in self._subwnd.items():
+            if not _instance is None:
+                _instance.draw(screen)
 
     def handler(self, event: pygame.event):
         super().handler(event)
 
-        self.onEntert = threading.Timer(5, hello)
 
 
 

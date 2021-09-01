@@ -20,17 +20,6 @@ import global_value as g
 
 
 SCR_RECT = Rect(0, 0, 800, 600)
-GS = 32
-DOWN,LEFT,RIGHT,UP = 0,1,2,3
-STOP, MOVE = 0, 1  # 移動タイプ
-PROB_MOVE = 0.005  # 移動確率
-PROB_ENCOUNT = 0.05  # エンカウント確率
-TRANS_COLOR = (190,179,145)  # マップチップの透明色
-
-sounds = {}  # サウンド
-
-TITLE, FIELD, TALK, COMMAND, BATTLE_INIT, BATTLE_COMMAND, BATTLE_PROCESS = range(7)
-
 
 g.USREVENT_OOPS = pygame.USEREVENT + 1
 
@@ -46,7 +35,6 @@ class App:
         # フルスクリーン化 + Hardware Surface使用
         self.surfaceScreen = pygame.display.set_mode(SCR_RECT.size, DOUBLEBUF|HWSURFACE)
         pygame.display.set_caption("PyRPG 27 戦闘画面")
-        g.jpfont12 = pygame.font.Font('./assets/fonts/姫明朝ともえごぜんmini.otf', 12)
         g.enfont = pygame.font.Font('./assets/fonts/ipaexg.ttf', 12)
 
         g.playerParty = actor.PlayerParty()
@@ -63,15 +51,15 @@ class App:
         g.gamewindow = UI.GameWindow()
 
         # メインループを起動
-        global game_state
-        game_state = TITLE
+        g.game_state = TITLE
         
+        g.running = True
         self.mainloop()        
 
     def mainloop(self):
         """メインループ"""
         clock = pygame.time.Clock()
-        while True:
+        while g.running:
             clock.tick(20)
 
             for scene in reversed(g.currentScene):
@@ -97,7 +85,6 @@ class App:
 
 g.USREVENT_OOPS: pygame.USEREVENT
 
-g.jpfont12: pygame.font
 g.enfont: pygame.font
 
 g.currentScene: deque[scene]

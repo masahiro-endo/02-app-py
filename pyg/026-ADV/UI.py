@@ -38,12 +38,21 @@ class BaseWindow:
 
 
 class ImageWindow():
-    def __init__(self, rect: pygame.Rect, dict:Dict[str,str]):
+
+    class SHOW(IntEnum):
+        FADEIN = auto()
+        FADEOUT = auto()
+
+    def __init__(self, rect: pygame.Rect, **kwargs: Dict[str, Any]):
         self.x = rect.left
         self.y = rect.top
-        self.dict = dict
-        print(f'./assets/images/bg/{self.dict["image"]}')
-        self.image = pygame.image.load(f'./assets/images/bg/{self.dict["image"]}')
+        img: Any = kwargs.get('image')
+        self.effect: Any = kwargs.get('effect')
+        self.speed: Any = kwargs.get('speed')
+        print(f'./assets/images/bg/{img}')
+        self.pause: int = 0
+
+        self.image = pygame.image.load(f'./assets/images/bg/{img}')
         self.rect = self.image.get_rect()
         self.image = pygame.transform.scale(self.image, (self.rect.width // 3, self.rect.height // 3))
         self.image = self.image.convert()
@@ -51,11 +60,28 @@ class ImageWindow():
         self.rect = self.image.get_rect()
         self.rect.center = (320,240)
         
+        self.effect == self.SHOW.FADEIN
         self.trans = 0
+        if self.effect is None:
+            pass
+        elif self.effect == self.SHOW.FADEIN:
+            pass
+        elif self.effect == self.SHOW.FADEOUT:
+            self.trans = 250
 
     def update(self):
-        self.trans += 1
-        self.trans = self.trans if self.trans < 250 else 250
+        self.pause %= self.speed
+        if not self.pause == 0:
+            return
+
+        if self.effect is None:
+            pass
+        elif self.effect == self.SHOW.FADEIN:
+            self.trans += 1
+            self.trans = self.trans if self.trans < 250 else 250
+        elif self.effect == self.SHOW.FADEOUT:
+            self.trans -= 1
+            self.trans = self.trans if self.trans > 0 else 0
 
     def draw(self, screen: pygame.Surface):
         self.image.set_alpha(self.trans)
@@ -130,7 +156,7 @@ class SelectWindow():
                     self.sid = len(self.dict) - 1 if self.sid >= len(self.dict) else self.sid
 
 
-class MessageWindow():
+class MessageScriptWindow():
 
     class LIMIT(IntEnum):
         CHAR_COUNT = 10
@@ -156,14 +182,15 @@ class MessageWindow():
         self._cur[CHARPTR.WAIT_LINE]["cursor"] = UIcontrol.LineCursor(dx, dy, Color("white"))
         self._cur[CHARPTR.WAIT_PAGE]["cursor"] = UIcontrol.PageCursor(dx, dy, Color("white"))
         self._cur[CHARPTR.ENDOFLINE]["cursor"] = UIcontrol.FontCursor(dx, dy, Color("white"))
-        self.interval = 0
+        self.pause = 0
 
         self.surfs: deque[pygame.Surface] = deque()
 
         self.buf = ""
         self.ptr = 0
         self.init_scenario("scenario1")
-        self._subwnd['image'] = ImageWindow(WindowAssign.IMAGE, self.json_dict[self.currPage] )
+        # self._subwnd['image'] = ImageWindow(WindowAssign.IMAGE, image=self.json_dict[self.currPage])
+        self._subwnd['image'] = None
         
         self.status = CHARPTR.IS_ACTIVE
 
@@ -173,7 +200,6 @@ class MessageWindow():
         for self.currPage in self.json_dict: break
         self.init_page(self.currPage)
         self.status = CHARPTR.IS_ACTIVE
-
 
     def read_json(self, filename: str) -> typing.Any:
         f = open(f'./assets/events/{filename}.json', 'r', encoding="utf-8")
@@ -211,15 +237,16 @@ class MessageWindow():
                 sl["selected"] = 'False'
 
     def update(self):
-        self._subwnd['image'].update()
-        self.interval += 1
+        if not self._subwnd['image'] is None:
+            self._subwnd['image'].update()
+        self.pause += 1
         
         if not self._cur[self.status]["cursor"] == None:
             self._cur[self.status]["cursor"].update()
             return
 
-        self.interval %= self.speed
-        if not self.interval == 0:
+        self.pause %= self.speed
+        if not self.pause == 0:
             return
 
         if len(self.buf) >= self.LIMIT.CHAR_COUNT:
@@ -248,7 +275,7 @@ class MessageWindow():
 
         if ch == "#":
             self._subwnd['select'] = None
-            self._subwnd['select'] = SelectWindow(WindowAssign.SELECT, self.json_dict[self.currPage]["select"].items())
+            self._subwnd['select'] = SelectWindow(WindowAssign.SELECT, self.json_dict[self.currPage]["select"] )
             self.ptr += 1
             self.status = CHARPTR.WAIT_SELECT
             return
@@ -260,9 +287,9 @@ class MessageWindow():
         self.surfs[-1] = g.UIfont.render(self.buf) 
         self.ptr += 1
 
-
     def draw(self, screen: pygame.Surface):
-        self._subwnd['image'].draw(screen)
+        if not self._subwnd['image'] is None:
+            self._subwnd['image'].draw(screen)
 
         if not self._cur[self.status]["cursor"] == None:
             self._cur[self.status]["cursor"].draw(screen)
@@ -322,12 +349,12 @@ class TerminalWindow():
             pygame.K_s: {"func" : None, "visible": False},
             pygame.K_i: {"func" : None, "visible": False},
             pygame.K_p: {"func" : None, "visible": False},
-            pygame.K_u: {"func" : MessageWindow, "visible": True},
+            pygame.K_u: {"func" : MessageScriptWindow, "visible": True},
             pygame.K_o: {"func" : None, "visible": False},
     }
 
     def __init__(self):
-        self._keydict[K_u]["func"] = MessageWindow( WindowAssign.MESSAGE )
+        self._keydict[K_u]["func"] = MessageScriptWindow( WindowAssign.MESSAGE )
 
     def draw(self, screen: pygame.Surface):
         for _key, _cont in self._keydict.items():
@@ -348,9 +375,10 @@ class TerminalWindow():
                     _cont["func"].handler(event)
 
         if event.type == KEYUP:
-            if event.key == K_c:
-                self._keydict[K_c]["visible"] = not self._keydict[K_c]["visible"]
-                self._keydict[K_o]["visible"] = not self._keydict[K_o]["visible"]
+            if event.key in self._keydict.keys():
+                self._keydict[event.key]["visible"] = not self._keydict[event.key]["visible"]
+
+
 
 g.term: TerminalWindow
 

@@ -1,0 +1,49 @@
+{
+
+"page1":{
+    "title": "1111",
+    "image": "1701325i.jpg",
+    "character": "person1",
+    "text": "あいうえおかきくけこさしすせとたちつてとなにぬねのはひふへほまみむめも%",
+    "speed": "1",
+    "next": "page2"
+},
+"page2":{
+    "title": "2222",
+    "image": "2222.jpg",
+    "character": "person1",
+    "text": "いいいいいいい...#",
+    "speed": "2",
+    "next": "page3",
+    "select":{
+        "0": {"text": "３を選ぶ", "selected": "True", "surf": "", "value": "page3" },
+        "1": {"text": "４を選ぶ", "selected": "False", "surf": "", "value": "page4" },
+        "2": {"text": "５を選ぶ", "selected": "False", "surf": "", "value": "page5" }
+    }
+},
+"page3":{
+    "title": "3333",
+    "image": "3333.jpg",
+    "character": "person1",
+    "text": "うううううううううう",
+    "speed": "3",
+    "next": "page5"
+},
+"page4":{
+    "title": "4444",
+    "image": "4444.jpg",
+    "character": "person1",
+    "text": "ええええええええええ",
+    "speed": "4",
+    "next": "page5"
+},
+"page5":{
+    "title": "5555",
+    "image": "5555.jpg",
+    "character": "person1",
+    "text": "おおおおおおおおおおお",
+    "speed": "5",
+    "next": "page1"
+}
+
+}

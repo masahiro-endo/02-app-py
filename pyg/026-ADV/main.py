@@ -37,6 +37,7 @@ class App:
 
         g.sceneStack = deque()
         g.sceneStack.appendleft(scene.Demo())
+        g.sceneStack[-1].sequence_begin()
 
         g.UIfont = UI.UIfonts(20)
         g.term = UI.TerminalWindow()
@@ -49,7 +50,8 @@ class App:
         clock = pg.time.Clock()
         while g.running:
             clock.tick(20)
-            
+            self.mainScreen.fill(Color('black'))
+
             events: pg.Eventlist = pg.event.get()
             scene: Any
             for scene in reversed(g.sceneStack):

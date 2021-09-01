@@ -38,8 +38,8 @@ class BaseScene:
     def update(self):
         self.tick += 1
 
-    def draw(self, screen):
-        pass
+    def draw(self, screen: pygame.Surface):
+        screen.fill(Color('black'))
 
     def handler(self, event):
 
@@ -184,9 +184,8 @@ class BaseField(BaseScene):
     def update(self):
         super().update()
                   
-    def draw(self, screen):
+    def draw(self, screen:pygame.Surface):
         super().draw(screen)
-        screen.fill((0,0,0))
         lnw = 1
 
         # 迷路の枠線
