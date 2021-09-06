@@ -9,6 +9,7 @@ import json
 from typing import Any, Dict
 from enum import IntEnum
 import UIcontrol
+import os
 
 
 
@@ -48,18 +49,10 @@ class ImageWindow():
         self.y = rect.top
         img: Any = kwargs.get('image')
         self.effect: Any = kwargs.get('effect')
-        self.speed: Any = kwargs.get('speed')
-        print(f'./assets/images/bg/{img}')
+        self.speed: Any = kwargs.get('speed') if kwargs.get('speed') != None else 1
+        self.set_image(img)
         self.pause: int = 0
 
-        self.image = pygame.image.load(f'./assets/images/bg/{img}')
-        self.rect = self.image.get_rect()
-        self.image = pygame.transform.scale(self.image, (self.rect.width // 3, self.rect.height // 3))
-        self.image = self.image.convert()
-        self.image.set_colorkey(-1, RLEACCEL)
-        self.rect = self.image.get_rect()
-        self.rect.center = (320,240)
-        
         self.effect == self.SHOW.FADEIN
         self.trans = 0
         if self.effect is None:
@@ -68,6 +61,21 @@ class ImageWindow():
             pass
         elif self.effect == self.SHOW.FADEOUT:
             self.trans = 250
+
+    def set_image(self, img: str):
+        path: str = f'./assets/images/bg/{img}'
+        if __debug__:
+            print(path)
+        if path == os.path.basename(self.image):
+            return
+
+        self.image = pygame.image.load(path)
+        self.rect = self.image.get_rect()
+        self.image = pygame.transform.scale(self.image, (self.rect.width // 3, self.rect.height // 3))
+        self.image = self.image.convert()
+        self.image.set_colorkey(-1, RLEACCEL)
+        self.rect = self.image.get_rect()
+        self.rect.center = (320,240)
 
     def update(self):
         self.pause %= self.speed
@@ -175,7 +183,8 @@ class MessageScriptWindow():
             CHARPTR.WAIT_SELECT: {"cursor" : _subwnd['select']},
     }
 
-    def __init__(self, rect: pygame.Rect):
+    def __init__(self, rect: pygame.Rect, **kwargs: Dict[str, Any]):
+        scenario: Any = kwargs.get('scenario') if kwargs.get('scenario') != None else 'scenario1'
         self.rect = rect
         dx = rect.left + (rect.width // 2)
         dy = rect.top + (rect.height - 20)
@@ -188,7 +197,7 @@ class MessageScriptWindow():
 
         self.buf = ""
         self.ptr = 0
-        self.init_scenario("scenario1")
+        self.init_scenario(scenario)
         # self._subwnd['image'] = ImageWindow(WindowAssign.IMAGE, image=self.json_dict[self.currPage])
         self._subwnd['image'] = None
         
@@ -349,12 +358,13 @@ class TerminalWindow():
             pygame.K_s: {"func" : None, "visible": False},
             pygame.K_i: {"func" : None, "visible": False},
             pygame.K_p: {"func" : None, "visible": False},
-            pygame.K_u: {"func" : MessageScriptWindow, "visible": True},
+            pygame.K_u: {"func" : None, "visible": True},
             pygame.K_o: {"func" : None, "visible": False},
     }
 
     def __init__(self):
-        self._keydict[K_u]["func"] = MessageScriptWindow( WindowAssign.MESSAGE )
+        # self._keydict[K_u]["func"] = MessageScriptWindow( WindowAssign.MESSAGE, scenario='scenario1')
+        pass
 
     def draw(self, screen: pygame.Surface):
         for _key, _cont in self._keydict.items():

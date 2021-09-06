@@ -11,28 +11,29 @@ from enum import IntEnum
 
 
 
-class AutoMessageWindow():
+class ScriptPerserWindow():
 
     class LIMIT(IntEnum):
         CHAR_COUNT = 10
         LINE_COUNT = 4
         PAGE_COUNT = 999
 
-    def __init__(self, rect: pygame.Rect):
+    def __init__(self, rect: pygame.Rect, **kwargs: Dict[str, Any]):
+        scenario: Any = kwargs.get('scenario') if kwargs.get('scenario') != None else 'scenario1'
+        self.speed: Any = kwargs.get('speed') if kwargs.get('speed') != None else 1
         self.rect = rect
         self.pause = 0
 
         self.surfs: deque[pygame.Surface] = deque()
 
+        self.text = ""
         self.buf = ""
         self.ptr = 0
-        self.init_scenario("prologue")
+        self.init_scenario(scenario)
 
     def init_scenario(self, filename: str):
         self.json_dict = self.read_json(filename)
 
-        for self.currPage in self.json_dict: break
-        self.init_page(self.currPage)
 
     def read_json(self, filename: str) -> typing.Any:
         f = open(f'./assets/events/{filename}.json', 'r', encoding="utf-8")
