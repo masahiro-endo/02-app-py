@@ -50,10 +50,13 @@ class ImageWindow():
         img: Any = kwargs.get('image')
         self.effect: Any = kwargs.get('effect')
         self.speed: Any = kwargs.get('speed') if kwargs.get('speed') != None else 1
+        self.image_path = ""
         self.set_image(img)
         self.pause: int = 0
 
-        self.effect == self.SHOW.FADEIN
+        self.init_trans()
+
+    def init_trans(self):
         self.trans = 0
         if self.effect is None:
             pass
@@ -62,13 +65,24 @@ class ImageWindow():
         elif self.effect == self.SHOW.FADEOUT:
             self.trans = 250
 
+    def update_trans(self):
+        if self.effect is None:
+            pass
+        elif self.effect == self.SHOW.FADEIN:
+            self.trans += 1
+            self.trans = self.trans if self.trans < 250 else 250
+        elif self.effect == self.SHOW.FADEOUT:
+            self.trans -= 1
+            self.trans = self.trans if self.trans > 0 else 0
+
     def set_image(self, img: str):
         path: str = f'./assets/images/bg/{img}'
         if __debug__:
             print(path)
-        if path == os.path.basename(self.image):
+        if img == os.path.basename(self.image_path):
             return
 
+        self.image_path = path
         self.image = pygame.image.load(path)
         self.rect = self.image.get_rect()
         self.image = pygame.transform.scale(self.image, (self.rect.width // 3, self.rect.height // 3))
@@ -82,14 +96,7 @@ class ImageWindow():
         if not self.pause == 0:
             return
 
-        if self.effect is None:
-            pass
-        elif self.effect == self.SHOW.FADEIN:
-            self.trans += 1
-            self.trans = self.trans if self.trans < 250 else 250
-        elif self.effect == self.SHOW.FADEOUT:
-            self.trans -= 1
-            self.trans = self.trans if self.trans > 0 else 0
+        self.update_trans()
 
     def draw(self, screen: pygame.Surface):
         self.image.set_alpha(self.trans)
@@ -171,6 +178,9 @@ class MessageScriptWindow():
         LINE_COUNT = 4
         PAGE_COUNT = 999
 
+    _arg: Dict[str, Any] = {
+            'scenario': 'scenario1',
+    }
     _subwnd: Dict[str, Any] = {
             'select': SelectWindow,
             'image': ImageWindow,
@@ -184,7 +194,7 @@ class MessageScriptWindow():
     }
 
     def __init__(self, rect: pygame.Rect, **kwargs: Dict[str, Any]):
-        scenario: Any = kwargs.get('scenario') if kwargs.get('scenario') != None else 'scenario1'
+        self.validate_args(kwargs)
         self.rect = rect
         dx = rect.left + (rect.width // 2)
         dy = rect.top + (rect.height - 20)
@@ -197,11 +207,15 @@ class MessageScriptWindow():
 
         self.buf = ""
         self.ptr = 0
-        self.init_scenario(scenario)
+        self.init_scenario(self._arg['scenario'])
         # self._subwnd['image'] = ImageWindow(WindowAssign.IMAGE, image=self.json_dict[self.currPage])
         self._subwnd['image'] = None
         
         self.status = CHARPTR.IS_ACTIVE
+
+    def validate_args(self, args: Dict[str, Any]):
+        for key in self._arg.keys():
+            self._arg[key] = args.get(key) if args.get(key) != None else self._arg[key]
 
     def init_scenario(self, filename: str):
         self.json_dict = self.read_json(filename)
@@ -351,6 +365,7 @@ class UIfonts():
 g.UIfont: UIfonts
 
 
+
 class TerminalWindow():
     
     _keydict: Dict[int, Dict[str,Any]] = {
@@ -387,8 +402,6 @@ class TerminalWindow():
         if event.type == KEYUP:
             if event.key in self._keydict.keys():
                 self._keydict[event.key]["visible"] = not self._keydict[event.key]["visible"]
-
-
 
 g.term: TerminalWindow
 

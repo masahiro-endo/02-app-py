@@ -3,6 +3,7 @@
 "page1":{
     "title": "1111",
     "image": "1701325i.jpg",
+    "text": "",
     "speed": "2",
     "interval": "5",
     "next": "page2"

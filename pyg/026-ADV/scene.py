@@ -48,8 +48,9 @@ class Demo(BaseScene):
 
     _subwnd: Dict[str, Any] = {
             'image': UI.ImageWindow,
-            'json': extend.AutoScriptWindow,
+            'script': extend.ScriptWindow,
     }
+    _perser: extend.ScriptPerser
 
     def __init__(self):
         super().__init__()
@@ -57,10 +58,9 @@ class Demo(BaseScene):
         self._subwnd['image'] = UI.ImageWindow(UI.WindowAssign.IMAGE, 
                                     image='1701325i.jpg', speed=2)
         self._subwnd['image'].effect = None
-
-        self._subwnd['json'] = extend.ScriptPerserWindow(UI.WindowAssign.IMAGE,
-                                    scenario='prologue')
-
+        self._subwnd['script'] = extend.ScriptWindow(UI.WindowAssign.IMAGE)
+        self._perser = extend.ScriptPerser(scenario='prologue')
+ 
     def stop(self):
         if not self.stopevent is None:
             self.stopevent.set()
@@ -83,18 +83,18 @@ class Demo(BaseScene):
         self.do_interval(interval=5, func=self.seq_1)
 
     def seq_1(self):
-        for self.currPage in self._subwnd['msg'].json_dict: break
-        self._subwnd['json'].init_page(self.currPage)
-
+        self._subwnd['script'].init_buf(self._perser.text)
         self._subwnd['image'].effect = None
         self.do_interval(interval=5, func=self.seq_2)
 
     def seq_2(self):
-        self._subwnd['json'].init_page(self._subwnd['json'].next)
+        self._perser.init_page(self._perser.next)
+        self._subwnd['script'].init_buf(self._perser.text)
         self._subwnd['image'].set_image("1701327i.jpg")
         self.do_interval(interval=5, func=self.seq_3)
 
     def seq_3(self):
+        self._subwnd['script'].effect = UI.ImageWindow.SHOW.FADEOUT
         self._subwnd['image'].effect = UI.ImageWindow.SHOW.FADEOUT
         self.do_interval(interval=5, func=self.seq_end)
 

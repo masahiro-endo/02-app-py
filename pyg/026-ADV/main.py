@@ -13,10 +13,14 @@ sys.path.append(os.path.dirname(__file__))
 
 
 
-class DisplayResolution():
-    VGA = Rect(0, 0, 640, 480)
-    SVGA = Rect(0, 0, 800, 600)
-    XGA = Rect(0, 0, 1024, 768)
+class setting:
+    class DisplayResolution():
+        VGA = Rect(0, 0, 640, 480)
+        SVGA = Rect(0, 0, 800, 600)
+        XGA = Rect(0, 0, 1024, 768)
+    FPS = 20
+    FONTSIZE = 20
+    CAPTION = "aaaaaaa"
 
 
 g.USREVENT_OOPS = pg.USEREVENT + 1
@@ -32,14 +36,15 @@ class App:
         pg.init()
         pg.key.set_repeat()
         
-        self.mainScreen = pg.display.set_mode(DisplayResolution.VGA.size, DOUBLEBUF | HWSURFACE)
-        pg.display.set_caption("caption")
+        self.mainScreen = pg.display.set_mode(setting.DisplayResolution.VGA.size, DOUBLEBUF | HWSURFACE)
+        pg.display.set_caption(setting.CAPTION)
+
+        g.UIfont = UI.UIfonts(setting.FONTSIZE)
 
         g.sceneStack = deque()
         g.sceneStack.appendleft(scene.Demo())
-        g.sceneStack[-1].sequence_begin()
+        g.sceneStack[-1].seq_begin()
 
-        g.UIfont = UI.UIfonts(20)
         g.term = UI.TerminalWindow()
         
         g.running = True
@@ -49,7 +54,7 @@ class App:
 
         clock = pg.time.Clock()
         while g.running:
-            clock.tick(20)
+            clock.tick(setting.FPS)
             self.mainScreen.fill(Color('black'))
 
             events: pg.Eventlist = pg.event.get()
