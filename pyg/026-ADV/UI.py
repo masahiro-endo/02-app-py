@@ -9,6 +9,7 @@ import json
 from typing import Any, Dict
 from enum import IntEnum
 import UIcontrol
+import extend
 import os
 
 
@@ -44,17 +45,30 @@ class ImageWindow():
         FADEIN = auto()
         FADEOUT = auto()
 
+    _arg: Dict[str, Any] = {
+            'image': None,
+            'effect': None,
+            'speed': 1,
+    }
+
     def __init__(self, rect: pygame.Rect, **kwargs: Dict[str, Any]):
         self.x = rect.left
         self.y = rect.top
-        img: Any = kwargs.get('image')
-        self.effect: Any = kwargs.get('effect')
-        self.speed: Any = kwargs.get('speed') if kwargs.get('speed') != None else 1
+        self.validate_args(kwargs)
+        img: Any = self._arg['image']
+        self.effect: Any = self._arg['effect']
+        self.speed: Any = self._arg['speed']
         self.image_path = ""
         self.set_image(img)
         self.pause: int = 0
 
         self.init_trans()
+
+    def validate_args(self, args: Dict[str, Any]):
+        for key in self._arg.keys():
+            arg: Any = args.get(key)
+            if arg != None:
+                self._arg[key] = arg
 
     def init_trans(self):
         self.trans = 0
@@ -171,7 +185,7 @@ class SelectWindow():
                     self.sid = len(self.dict) - 1 if self.sid >= len(self.dict) else self.sid
 
 
-class MessageScriptWindow():
+class UINovel():
 
     class LIMIT(IntEnum):
         CHAR_COUNT = 10
@@ -180,88 +194,47 @@ class MessageScriptWindow():
 
     _arg: Dict[str, Any] = {
             'scenario': 'scenario1',
+            'speed': 1,
     }
     _subwnd: Dict[str, Any] = {
             'select': SelectWindow,
             'image': ImageWindow,
+            'script': extend.ScriptWindow,
     }
     _cur: Dict[CHARPTR, Dict[str, Any]] = {
-            CHARPTR.IS_ACTIVE: {"cursor" : None},
-            CHARPTR.WAIT_LINE: {"cursor" : UIcontrol.LineCursor},
-            CHARPTR.WAIT_PAGE: {"cursor" : UIcontrol.PageCursor},
-            CHARPTR.ENDOFLINE: {"cursor" : UIcontrol.FontCursor},
-            CHARPTR.WAIT_SELECT: {"cursor" : _subwnd['select']},
+            CHARPTR.IS_ACTIVE: {'cursor' : None, 'delim' : ''},
+            CHARPTR.WAIT_LINE: {'cursor' : UIcontrol.LineCursor, 'delim' : '/'},
+            CHARPTR.WAIT_PAGE: {'cursor' : UIcontrol.PageCursor, 'delim' : '%'},
+            CHARPTR.WAIT_SELECT: {'cursor' : _subwnd['select'], 'delim' : '#'},
     }
+    _perser: extend.ScriptPerser
 
     def __init__(self, rect: pygame.Rect, **kwargs: Dict[str, Any]):
         self.validate_args(kwargs)
+        self.speed: int = self._arg['speed']
         self.rect = rect
         dx = rect.left + (rect.width // 2)
         dy = rect.top + (rect.height - 20)
         self._cur[CHARPTR.WAIT_LINE]["cursor"] = UIcontrol.LineCursor(dx, dy, Color("white"))
         self._cur[CHARPTR.WAIT_PAGE]["cursor"] = UIcontrol.PageCursor(dx, dy, Color("white"))
-        self._cur[CHARPTR.ENDOFLINE]["cursor"] = UIcontrol.FontCursor(dx, dy, Color("white"))
-        self.pause = 0
+        self.pause: int = 0
 
         self.surfs: deque[pygame.Surface] = deque()
 
-        self.buf = ""
-        self.ptr = 0
-        self.init_scenario(self._arg['scenario'])
-        # self._subwnd['image'] = ImageWindow(WindowAssign.IMAGE, image=self.json_dict[self.currPage])
-        self._subwnd['image'] = None
+        self.buf: str = ""
+        self.ptr: int = 0
+        self._subwnd['script'] = extend.ScriptWindow(WindowAssign.IMAGE)
+        self._perser = extend.ScriptPerser(scenario='scenario')
         
         self.status = CHARPTR.IS_ACTIVE
 
     def validate_args(self, args: Dict[str, Any]):
         for key in self._arg.keys():
-            self._arg[key] = args.get(key) if args.get(key) != None else self._arg[key]
-
-    def init_scenario(self, filename: str):
-        self.json_dict = self.read_json(filename)
-
-        for self.currPage in self.json_dict: break
-        self.init_page(self.currPage)
-        self.status = CHARPTR.IS_ACTIVE
-
-    def read_json(self, filename: str) -> typing.Any:
-        f = open(f'./assets/events/{filename}.json', 'r', encoding="utf-8")
-        json_dict = json.load(f, object_pairs_hook=OrderedDict)
-
-        if __debug__:
-            for x in json_dict:
-                print(f'{x}:{json_dict[x]}')
-
-        return json_dict
-
-    def init_page(self, currPage: str):
-        self.text = self.json_dict[currPage]["text"]
-        self.next = self.json_dict[currPage]["next"]
-        self.speed = int(self.json_dict[currPage]["speed"])
-
-        self.surfs.clear()
-        self.surfs.append(g.UIfont.render(self.buf))
-
-        self.buf = ""
-        self.ptr = 0
-
-    def update_selectvalue(self):
-        _sid = str(self._subwnd['select'].sid)
-        for x, sl in self.json_dict[self.currPage]["select"].items():
-            if _sid == x:
-                sl["selected"] = 'True'
-                if "page" in sl["value"]:
-                    self.init_page(sl["value"])
-                elif "scenario" in sl["value"]:
-                    self.init_scenario(sl["value"])
-                else:
-                    pass
-            else:
-                sl["selected"] = 'False'
+            arg: Any = args.get(key)
+            if arg != None:
+                self._arg[key] = arg
 
     def update(self):
-        if not self._subwnd['image'] is None:
-            self._subwnd['image'].update()
         self.pause += 1
         
         if not self._cur[self.status]["cursor"] == None:
@@ -279,11 +252,11 @@ class MessageScriptWindow():
         if len(self.surfs) >= self.LIMIT.LINE_COUNT:
             self.surfs.popleft()
 
-        if len(self.buf) >= len(self.text) or self.ptr >= len(self.text):
+        if len(self.buf) >= len(self._perser.text) or self.ptr >= len(self._perser.text):
             self.status = CHARPTR.WAIT_PAGE
             return
 
-        ch = self.text[self.ptr]
+        ch = self._perser.text[self.ptr]
 
         if ch == "/":
             self.buf = ""
@@ -306,14 +279,11 @@ class MessageScriptWindow():
         if ch == "$":
             pass
 
-        self.buf += self.text[self.ptr]
+        self.buf += self._perser.text[self.ptr]
         self.surfs[-1] = g.UIfont.render(self.buf) 
         self.ptr += 1
 
     def draw(self, screen: pygame.Surface):
-        if not self._subwnd['image'] is None:
-            self._subwnd['image'].draw(screen)
-
         if not self._cur[self.status]["cursor"] == None:
             self._cur[self.status]["cursor"].draw(screen)
 
@@ -332,12 +302,10 @@ class MessageScriptWindow():
                     self.status = CHARPTR.IS_ACTIVE
                 
                 if self.status == CHARPTR.WAIT_PAGE:
-                    self.currPage = self.next
-                    self.init_page(self.currPage)
+                    self._perser.init_page(self._perser.next)
                     self.status = CHARPTR.IS_ACTIVE
                 
                 if self.status == CHARPTR.WAIT_SELECT:
-                    self.update_selectvalue()
                     self.status = CHARPTR.IS_ACTIVE
 
 

@@ -46,6 +46,10 @@ class BaseScene:
 
 class Demo(BaseScene):
 
+    _arg: Dict[str, Any] = {
+            'interval': 5,
+            'func': None,
+    }
     _subwnd: Dict[str, Any] = {
             'image': UI.ImageWindow,
             'script': extend.ScriptWindow,
@@ -61,6 +65,12 @@ class Demo(BaseScene):
         self._subwnd['script'] = extend.ScriptWindow(UI.WindowAssign.IMAGE)
         self._perser = extend.ScriptPerser(scenario='prologue')
  
+    def validate_args(self, args: Dict[str, Any]):
+        for key in self._arg.keys():
+            arg: Any = args.get(key)
+            if arg != None:
+                self._arg[key] = arg
+
     def stop(self):
         if not self.stopevent is None:
             self.stopevent.set()
@@ -69,8 +79,9 @@ class Demo(BaseScene):
         return self.stopevent.is_set()
 
     def do_interval(self, **kwargs: Dict[str, Any]):
-        intvl: Any = kwargs.get('interval') 
-        func: Any = kwargs.get('func') 
+        self.validate_args(kwargs)
+        intvl: Any = self._arg['interval']
+        func: Any = self._arg['func'] 
 
         self.stop()
         self.timer = threading.Timer(intvl, func)

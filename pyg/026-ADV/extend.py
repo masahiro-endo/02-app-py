@@ -15,13 +15,25 @@ from UI import UIfonts
 
 class ScriptPerser():
 
+    _arg: Dict[str, Any] = {
+            'scenario': 'scenario1',
+            'speed': 1,
+    }
+
     def __init__(self, **kwargs: Dict[str, Any]):
-        scenario: Any = kwargs.get('scenario') if kwargs.get('scenario') != None else 'scenario1'
-        self.speed: Any = kwargs.get('speed') if kwargs.get('speed') != None else 1
+        self.validate_args(kwargs)
+        scenario: Any = self._arg['scenario']
+        self.speed: Any = self._arg['speed']
 
         self.init_scenario(scenario)
         for self.currPage in self.json_dict: break
         self.init_page(self.currPage)
+
+    def validate_args(self, args: Dict[str, Any]):
+        for key in self._arg.keys():
+            arg: Any = args.get(key)
+            if arg != None:
+                self._arg[key] = arg
 
     def init_scenario(self, filename: str):
         self.json_dict = self.read_json(filename)
@@ -63,10 +75,11 @@ class ScriptWindow():
     }
 
     def __init__(self, rect: pygame.Rect, **kwargs: Dict[str, Any]):
-        func: Any = kwargs.get('func') if kwargs.get('func') != None else 'clear'
-        txt: Any = kwargs.get('text') if kwargs.get('text') != None else ''
-        self.speed: Any = kwargs.get('speed') if kwargs.get('speed') != None else 1
-        self.effect: Any = kwargs.get('effect')
+        self.validate_args(kwargs)
+        func = self._arg['func']
+        txt = self._arg['text']
+        self.speed: Any = self._arg['speed']
+        self.effect: Any = self._arg['effect']
         self.rect = rect
         self.pause = 0
 
@@ -77,6 +90,12 @@ class ScriptWindow():
             self.init_buf(txt)
         else:
             self.append_buf(txt)
+
+    def validate_args(self, args: Dict[str, Any]):
+        for key in self._arg.keys():
+            arg: Any = args.get(key)
+            if arg != None:
+                self._arg[key] = arg
 
     def init_buf(self, txt: str):
         self.text = txt
