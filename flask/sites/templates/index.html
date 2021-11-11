@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>flask</title>
+    <style type="text/css">
+        select { width: 250px;
+                height: 5em;
+        }
+    </style>
+  </head>
+  <body>
+    <select name="sample">
+    {% for data in data_list %}
+        <option value="{{ data }}">{{ data }}</option>
+    {% endfor %}
+    </select>
+  </body>
+</html>
+
+

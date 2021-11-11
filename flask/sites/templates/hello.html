@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+<link href="/static/css/main.css" rel="stylesheet">
+
+<h3>Hello</h3>
+<p>こんにちは。{{ name }}さん。</p>
+
+<script src="/static/js/jquery-3.6.0.min.js"></script>
+
+<script>
+  $(function(){
+    // ここにプログラムを記述
+    alert($('p').text());
+  });
+</script>
+
+{% endblock %}
+
