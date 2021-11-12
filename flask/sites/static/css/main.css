@@ -5,3 +5,7 @@ select {
     width: 250px;
     height: 5em;
 }
+textarea {
+	width: 450px;
+	height: 370px;
+}

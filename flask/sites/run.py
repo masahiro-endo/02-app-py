@@ -11,20 +11,13 @@ from flask import Flask, request, render_template
 
 
 
-# Excelの読み込みと顧客一覧抽出
-def read_excel(filename: str,sheetname: str, columnname: str) -> Any:
-    df = pd.read_excel(filename, sheet_name=None)
-
-    return df[sheetname].loc[:,columnname].unique()
-
-data_1 = read_excel('sample.xlsx','Listitem1','ITEMNAME')
-data_2 = read_excel('sample.xlsx','Listitem2','ITEMNAME')
-data_3 = read_excel('sample.xlsx','Listitem3','ITEMNAME')
-
-
-
 @app.route('/', methods=['POST', 'GET'])
 def index():
+    df = pd.read_excel('sample.xlsx', sheet_name=['Listitem1', 'Listitem2', 'Listitem3'])
+    data_1 = df['Listitem1'].to_numpy().tolist()
+    data_2 = df['Listitem2'].to_numpy().tolist()
+    data_3 = df['Listitem3'].to_numpy().tolist()
+
     return render_template('index.html', 
                title='メインメニュー', 
                listitem_1=data_1, 
@@ -35,28 +28,53 @@ def index():
 @app.route('/output/', methods = ['POST', 'GET'])
 def output():
     if request.method == 'POST':
+        if (request.form.get('search') != None):
+            pass
+        if (request.form.get('chkbtn1') != None):
+            pass
+        opt1 = request.form.get('optbtn1')
+        
         result  = request.form
-        prm_1: str = str(result['listitem_1'])
-        prm_2: str = str(result['listitem_2'])
-        prm_3: str = str(result['listitem_3'])
-    
-        texts: List[str] = []
+        prm_1: Any = str(result['listitem_1'])
+        prm_2: Any = str(result['listitem_2'])
+        prm_3: Any = str(result['listitem_3'])
+
+        # 90X をインデックス指定すると何故かエラーになる
+        df = pd.read_excel('sample.xlsx', sheet_name=['BODY'], index_col='APP')
+        res_1: Any = df['BODY'].loc[f"{prm_1}", 'RPY_GRP']
+        res_2: Any = df['BODY'].loc[f"{prm_1}", 'INQ']
+        res_3: Any = df['BODY'].loc[f"{prm_1}", 'ANS']
+
+        column: List[str] = []
+        results: List[List[str]] = []
+        column = []
+        column.append(res_1)
+        results.append(column)
+        column = []
+        column.append(res_2)
+        results.append(column)
+        column = []
+        column.append(res_3)
+        results.append(column)
+
+
+
+        column: List[str] = []
         lists: List[List[str]] = []
 
-        texts = []
-        texts.append(prm_1)
-        lists.append(texts)
-
-        texts = []
-        texts.append(prm_2)
-        lists.append(texts)
-
-        texts = []
-        texts.append(prm_3)
-        lists.append(texts)
+        column = []
+        column.append(prm_1)
+        lists.append(column)
+        column = []
+        column.append(prm_2)
+        lists.append(column)
+        column = []
+        column.append(prm_3)
+        lists.append(column)
 
         return render_template('output.html',
-                lists=lists
+                lists=lists,
+                results=results
                 )
     else:
         return render_template('output.html')

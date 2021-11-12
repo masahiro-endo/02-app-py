@@ -2,6 +2,29 @@
 {% block content %}
 
 
+<form action="/" method="POST">
+    <button type="submit" value="home">戻る</button>
+</form>
+
+<table cellspacing="2" cellpadding="2" border="1">
+    <tbody>
+      <tr>
+        <th>#</th>
+        <th>Results</th>
+      </tr>
+      {% set row = namespace(value=0) %}
+      {% for list in results %}
+        <tr>
+        <td>{{ row.value }}</td>
+        {% for item in list %}
+            <td><textarea name="area_{{ row.value }}" readonly>{{ item }}</textarea></td>
+        {% endfor %}
+        </tr>
+        {% set row.value = row.value + 1 %}
+      {% endfor %}
+    </tbody>
+</table>
+
 <table cellspacing="2" cellpadding="2" border="1">
     <tbody>
       <tr>
@@ -19,6 +42,6 @@
         {% set row.value = row.value + 1 %}
       {% endfor %}
     </tbody>
-  </table>
+</table>
 
 {% endblock %}
