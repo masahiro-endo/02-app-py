@@ -1,1 +1,7 @@
-body {background: #B2DFDB}
+body {
+    background: #B2DFDB;
+}
+select {
+    width: 250px;
+    height: 5em;
+}

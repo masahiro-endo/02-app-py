@@ -1,21 +1,48 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block content %}
+<link href="/static/css/main.css" rel="stylesheet">
 
-  <head>
-    <title>flask</title>
-    <style type="text/css">
-        select { width: 250px;
-                height: 5em;
-        }
-    </style>
-  </head>
-  <body>
-    <select name="sample">
-    {% for data in data_list %}
-        <option value="{{ data }}">{{ data }}</option>
+
+
+
+<form action = "output/" method = "POST">
+
+  <select name="listitem_1">
+    {% for data in listitem_1 %}
+      <option value="{{ data }}">{{ data }}</option>
     {% endfor %}
-    </select>
-  </body>
-</html>
+  </select>
+  <select name="listitem_2">
+    {% for data in listitem_2 %}
+      <option value="{{ data }}">{{ data }}</option>
+    {% endfor %}
+  </select>
+  <select name="listitem_3">
+    {% for data in listitem_3 %}
+      <option value="{{ data }}">{{ data }}</option>
+    {% endfor %}
+  </select>
 
+  <p><input class="button" type="submit" value="search"></p>
+</form>
+
+
+
+
+
+
+
+
+
+
+<script src="/static/js/jquery-3.6.0.min.js"></script>
+
+<script>
+  $(function(){
+    // ここにプログラムを記述
+    // alert($('p').text());
+  });
+</script>
+
+{% endblock %}
 

@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block content %}
+
+
+<table cellspacing="2" cellpadding="2" border="1">
+    <tbody>
+      <tr>
+        <th>#</th>
+        <th>Parameters</th>
+      </tr>
+      {% set row = namespace(value=0) %}
+      {% for list in lists %}
+        <tr>
+        <td>{{ row.value }}</td>
+        {% for item in list %}
+            <td>{{ item }}</td>
+        {% endfor %}
+        </tr>
+        {% set row.value = row.value + 1 %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %}

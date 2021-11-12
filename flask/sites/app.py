@@ -1,21 +1,22 @@
 
 from typing import Any
 from flask import Flask
-import os
 
+
+config = {
+    "default": "config.config.AppConfig"
+}
 
 
 def create_app():
 
-    app: Any = Flask(__name__)
+    app: Any = Flask(__name__, instance_relative_config=True)
 
-    #SECRET_KEY
-    app.config['SECRET_KEY'] = os.urandom(24)
-    app.config['DEBUG'] = True
-
-    #Flask Config
-    app.config.from_object('config.config.Config')
-
+    # 設定はオブジェクトとして読み込む
+    app.config.from_object(config['default'])
+    # センシティブな設定はインスタンスフォルダ内の設定で上書きする
+    app.config.from_pyfile('config.cfg', silent=True)
+    
     return app
 
 app = create_app()
