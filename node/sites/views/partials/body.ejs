@@ -1,4 +1,21 @@
 
+
+<table>
+  <tbody>
+    <th>No</th>
+    <th>名前</th>    
+    <th>生年月日</th>
+    <% for( var i in mascots ){ %>
+    <tr>
+      <td><%= mascots[i].name %></td>
+      <td><%= mascots[i].organization %></td>
+      <td><%= mascots[i].birth_year %></td>
+    </tr>
+    <% } %>
+  </tbody>
+</table>
+
+
 <div class="jumbotron">
     <div class="bg-image" style="background-image: url('https://i.picsum.photos/id/1022/6000/3376.jpg?hmac=FBA9Qbec8NfDlxj8xLhV9k3DQEKEc-3zxkQM-hmfcy0');
     height: 50vh">
