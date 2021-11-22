@@ -1,7 +1,7 @@
 
-const mysql = require('mysql');
-const db = require('../config/db');
-const table = 'users';
+//const mysql = require('mysql');
+//const db = require('../config/db');
+//const table = 'users';
 
 module.exports = {
 

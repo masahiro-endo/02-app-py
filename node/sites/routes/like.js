@@ -13,14 +13,14 @@ try { //いいねデータがあれば読み込み。なければいいねが0
 }
 
 app.get('/', (req, res) => {
-  res.render('./like.ejs',{like:like});
+  res.render('pages/like.ejs',{like:like});
 });
 
 app.post('/', (req, res) => { //いいねボタンをクリックした時
   like++;
 
   fs.writeFileSync('./data.txt',String(like));
-  res.render('./like.ejs',{like:like});
+  res.render('pages/like.ejs',{like:like});
 });
 
 module.exports = app;
