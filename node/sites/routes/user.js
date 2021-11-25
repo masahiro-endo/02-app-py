@@ -1,12 +1,14 @@
 
 var express = require('express');
-var app = express.Router();
 var userController = require('../controllers/UserController')
+var app = express.Router();
 
-app.get('/users', function(req, res) {
+
+
+app.get('/', function(req, res) {
     userController.doGetUser
 });
-app.get('/users/regist', function(req, res) {
+app.get('/regist', function(req, res) {
     userController.doRegistUser
 });
 

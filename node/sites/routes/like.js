@@ -4,24 +4,30 @@ const fs = require('fs');
 const express = require('express')
 
 var app = express.Router();
-var like;
+var like = 0;
 
-try { //いいねデータがあれば読み込み。なければいいねが0
+
+//いいねデータがあれば読み込み。なければいいねが0
+try {
   like = fs.readFileSync('./data.txt','UTF-8');
-} catch(err){
+} catch (err) {
   like = 0;
 }
 
+
 app.get('/', (req, res) => {
-  res.render('pages/like.ejs',{like:like});
+  res.render('pages/like', {like: like});
 });
 
-app.post('/', (req, res) => { //いいねボタンをクリックした時
+//いいねボタンをクリックした時
+app.post('/', (req, res) => {
   like++;
-
   fs.writeFileSync('./data.txt',String(like));
-  res.render('pages/like.ejs',{like:like});
+
+  res.render('pages/like', {like: like});
 });
+
+
 
 module.exports = app;
 

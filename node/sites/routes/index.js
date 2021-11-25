@@ -5,7 +5,7 @@ var app = express.Router();
 
 
 // indexのテンプレートを呼び出す
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
     var mascots = [
       { name: 'Sammy', organization: "DigitalOcean", birth_year: 2012},
       { name: 'Tux', organization: "Linux", birth_year: 1996},
