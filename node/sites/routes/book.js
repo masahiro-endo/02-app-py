@@ -24,9 +24,9 @@ app.use(function timeLog (req, res, next) {
 });
 
 const myLogger = function (req, res, next) {
-    console.log('LOGGED')
-    next()
-}
+    console.log('LOGGED');
+    next();
+};
 app.use(myLogger);
 
 const requestTime = function (req, res, next) {
@@ -45,25 +45,6 @@ app.get('/', (req, res) => {
 
 app.post('/', (req, res, next) => {
 
-    /*
-    const options = {
-        method: 'GET',
-        url: 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + req.body.number,
-        json: true
-    };
-    console.log(options);
-
-    request(options, function (error, response, data) {
-        //console.log(body.items[0].volumeInfo.title);
-        //res.send(body);
-        if (!error && response.statusCode == 200) {
-            data = JSON.parse(data);
-            console.log(data);
-            res.render('pages/book', {book: data} );
-        }
-    });
-    */
-
     const tunnelAg = tunnel.httpsOverHttp({
         proxy: {
             host: '10.249.1.253',
@@ -78,8 +59,21 @@ app.post('/', (req, res, next) => {
         path: '/books/v1/volumes?q=flowers+inauthor:keyes&key=' + myAPIkey,
         agent: tunnelAg,
         json: true,
+        url: 'https://www.googleapis.com/books/v1/volumes?q=flowers+inauthor:keyes&key=' + myAPIkey,
     };
     
+    
+    request(options, function (error, response, data) {
+        //console.log(body.items[0].volumeInfo.title);
+        //res.send(body);
+        if (!error && response.statusCode == 200) {
+            //data = JSON.parse(data);
+            console.log(data);
+            res.render('pages/book', {book: data} );
+        }
+    });
+    
+    /*
     https.get(options, (resp) => { 
         let data = ''; 
     
@@ -97,8 +91,11 @@ app.post('/', (req, res, next) => {
     }).on("error", (err) => { 
         console.log("Error: " + err.message); 
     });
+    */
 
-    next();
+    //unable main process temporary
+    // next();
+
 }, (req, res) => {
     console.log("req.requestTime: " + req.requestTime); 
     res.render('pages/about');

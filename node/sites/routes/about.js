@@ -7,7 +7,7 @@ var app = express.Router();
 
 
 // aboutページのテンプレートを呼び出す
-// '/about' ではない
+// app.get('/about', ・・・ ではない
 app.get('/', function (req, res) {
     res.render('pages/about');
 });

@@ -6,8 +6,8 @@
     <title>Node.js サンプルモック</title>
 </head>
 <body>
-    <div>
-        <h2>ISBNコード送信</h2>
+    <form action="/book" method="post" >
+        <h4>ISBNコード送信</h4>
         <div>
             <input id="isbn" placeholder="isbn" type="text" value="4309025447">
         </div>
@@ -15,9 +15,10 @@
             <button id="send">送信</button>
         </div>
         <%= book %>
-    </div>
-    <script>
+    </form>
 
+    <script>
+    /**/
     document.getElementById("send").onclick = function() {
 
         const isbn = document.getElementById("isbn").value;
@@ -36,7 +37,7 @@
                 console.log(error);
             });
     };
-
+    /**/
     </script>
 </body>
 </html>
