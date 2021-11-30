@@ -3,14 +3,14 @@
     // 「戻る」ボタン押下時に呼び出されます。
     var btnBack_onclick = function (event) {
       var $form = $("#form");
-      $form.attr("action", "/shop/regist/input");
+      $form.attr("action", "/shop/input");
       $form.submit();
     };
    
     // 「登録」ボタン押下時に呼び出されます。
     var btnRegist_onclick = function (event) {
       var $form = $("#form");
-      $form.attr("action", "/shop/regist/complete");
+      $form.attr("action", "/shop/complete");
       $form.submit();
     };
    

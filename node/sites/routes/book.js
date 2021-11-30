@@ -39,8 +39,7 @@ app.use(requestTime);
 
 
 app.get('/', (req, res) => {
-    let data = ''; 
-    res.render('pages/book', {book: data} );
+    res.render('pages/book');
 });
 
 app.post('/', (req, res, next) => {
@@ -56,18 +55,17 @@ app.post('/', (req, res, next) => {
         method: 'GET',
         host: 'www.googleapis.com',
         port: 443,
-        path: '/books/v1/volumes?q=flowers+inauthor:keyes&key=' + myAPIkey,
+        path: `/books/v1/volumes?q=isbn:${req.body.isbn}&key=${myAPIkey}`,
         agent: tunnelAg,
         json: true,
-        url: 'https://www.googleapis.com/books/v1/volumes?q=flowers+inauthor:keyes&key=' + myAPIkey,
+        url: `https://www.googleapis.com/books/v1/volumes?q=isbn:${req.body.isbn}&key=${myAPIkey}`,
     };
+    console.log('url: ' + options.url);
     
     
     request(options, function (error, response, data) {
-        //console.log(body.items[0].volumeInfo.title);
-        //res.send(body);
         if (!error && response.statusCode == 200) {
-            //data = JSON.parse(data);
+            data = JSON.stringify(data);
             console.log(data);
             res.render('pages/book', {book: data} );
         }
@@ -85,7 +83,10 @@ app.post('/', (req, res, next) => {
         // The whole response has been received. Print out the result. 
         resp.on('end', () => { 
             //console.log(JSON.parse(data).explanation);
-            console.log(data.toString());
+            //console.log(data.toString());
+            data = JSON.stringify(data);
+            console.log(data);
+            res.render('pages/book', {book: data} );
         }); 
     
     }).on("error", (err) => { 

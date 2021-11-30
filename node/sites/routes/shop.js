@@ -1,19 +1,21 @@
 
-var router = require("express").Router();
+const express = require('express')
+var app = express.Router();
 //var co = require("co");
 //var MongoClient = require("mongodb").MongoClient;
-var Tokens = require("csrf");
-var tokens = new Tokens();
- 
+var csrf = require("csurf");
+var csrfProtection = csrf({ cookie: true })
+
+
 /**
- * リクエストボディーからデータを抽出
+ * リクエストボディーからForm入力データを抽出
  */
-var extract = function (request) {
+var extract = function (req) {
   return {
-    name: request.body.name,
-    location: request.body.location,
-    tel: request.body.tel,
-    _csrf: request.body._csrf
+    name:       req.body.name,
+    location:   req.body.location,
+    tel:        req.body.tel,
+    _csrf:      req.body._csrf
   };
 };
  
@@ -26,11 +28,9 @@ var validate = function (data) {
   if (!data.name) {
     errors[errors.length] = "会社名を指定してください。";
   }
- 
   if (!data.location) {
     errors[errors.length] = "所在地を指定してください。";
   }
- 
   if (!data.tel) {
     errors[errors.length] = "電話番号を指定してください。";
   }
@@ -41,6 +41,7 @@ var validate = function (data) {
 /**
  * リクエストデータを登録
  */
+/*
 var commit = function (data, callback) {
   const URL = "mongodb://localhost:27017/test";
  
@@ -59,101 +60,77 @@ var commit = function (data, callback) {
     console.error(JSON.stringify(reason));
   });
 };
+*/
+
+app.get("/", csrfProtection, function (req, res) {
+    res.redirect('/shop/input');
+ });
+
  
-/**
- * GET: /shop/regist/input
- */
-router.get("/regist/input", function (request, response) {
-  // 新規に 秘密文字 と トークン を生成
-  var secret = tokens.secretSync();
-  var token = tokens.create(secret);
- 
-  // 秘密文字はセッションに保存
-  request.session._csrf = secret;
- 
-  // トークンはクッキーに保存
-  response.cookie("_csrf", token);
- 
-  // 入力画面の表示
-  response.render("pages/shop/regist/input.ejs");
+app.get("/input", csrfProtection, function (req, res) {
+   // csrfToken付きでページを返す
+   res.render('pages/shop/input.ejs', { csrfToken: req.csrfToken() });
 });
  
-/**
- * POST: /shop/regist/input
- */
-router.post("/regist/input", function (request, response) {
+
+app.post("/input", csrfProtection, function (req, res) {
   // 入力データを取得
-  var data = extract(request);
+  var data = extract(req);
  
   // 入力画面の再表示
-  response.render("pages/shop/regist/input.ejs", data);
+  res.render('pages/shop/input.ejs', { data: data });
 });
- 
-/**
- * POST: /shop/regist/confirm
- */
-router.post("/regist/confirm", function (request, response) {
+
+
+app.post("/confirm", function (req, res) {
   // 入力データを取得
-  var data = extract(request);
+  var data = extract(req);
  
   // 入力データの検証
-  if (validate(data) === false) {
-    return response.render("pages/shop/regist/input.ejs", data);
+  if (!validate(data)) {
+    return res.render("pages/shop/input.ejs", { data: data });
   }
- 
-  response.render("pages/shop/regist/confirm.ejs", data);
+  res.render("pages/shop/confirm.ejs", data);
 });
  
-/**
- * POST: /shop/regist/complete
- */
-router.post("/regist/complete", function (request, response) {
-  // 秘密文字 と トークン を取得
-  var secret = request.session._csrf;
-  var token = request.cookies._csrf;
- 
-  // 秘密文字 と トークン の組み合わせが正しいか検証
-  if (tokens.verify(secret, token) === false) {
-    throw new Error("Invalid Token");
+
+app.post("/complete", function (req, res) {
+
+  if ('btn-back' in req.body) {
+    return res.redirect("/shop/input");
   }
- 
+
+
+
   // 入力データを取得
-  var data = extract(request);
+  var data = extract(req);
  
   // 入力データの検証
-  if (validate(data) === false) {
-    return response.render("pages/shop/regist/input.ejs", data);
+  if (!validate(data)) {
+    return res.render("pages/shop/input.ejs", data);
   }
  
   // 登録処理
   /*
   commit(data).then(() => {
     // 使用済み 秘密文字 と トークン の無効化
-    delete request.session._csrf;
-    response.clearCookie("_csrf");
+    delete req.session._csrf;
+    res.clearCookie("_csrf");
  
     // 完了画面へリダイレクト
-    response.redirect("/shop/regist/complete");
+    res.redirect("pages/shop/complete");
   });
   */
-  delete request.session._csrf;
-  response.clearCookie("_csrf");
 
   // 完了画面へリダイレクト
-  response.redirect("/shop/regist/complete");
-
-});
- 
-/**
- * GET: /shop/regist/complete
- */
-router.get("/regist/complete", function (request, response) {
-  response.render("pages/shop/regist/complete.ejs");
+  //res.redirect("pages/shop/complete");
+  res.render("pages/shop/complete.ejs", data);
 });
  
 
 
-module.exports = router;
+
+module.exports = app;
 
 
 
