@@ -1,25 +1,12 @@
 
-//const mysql = require('mysql');
-//const db = require('../config/db');
-//const table = 'users';
-
-module.exports = {
-
-  getUser: function () {
-    return new Promise ((resolve, reject) => {
-      const con = mysql.createConnection(db);
-      con.query(
-        `select id, name, date_format(birthdate,"%Y/%m/%d") as birthdate from ${table}`,  (err, result, fields) => {
-          if ( err ) {
-            reject(err);
-          } else {
-            resolve(result);
-          }
-        });
-      con.end();
-    });
-  },
-}
-
-
-
+const mongoose = require("mongoose");
+ 
+const UserSchema = mongoose.Schema({
+    "id":       String,
+    "email":    String,
+    "name":     String,
+    "password": String,
+    "role":     String
+});
+ 
+module.exports = mongoose.models.User || mongoose.model("User", UserSchema);

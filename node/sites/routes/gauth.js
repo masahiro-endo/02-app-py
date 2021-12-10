@@ -1,6 +1,8 @@
 
 const express = require('express');
 const app = express();
+
+/*
 const passport = require('passport');
 app.use(passport.initialize());
 const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
@@ -64,7 +66,7 @@ app.get('/auth/google/callback',
 );
 
 
-
+*/
 
 module.exports = app;
 

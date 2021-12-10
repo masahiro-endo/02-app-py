@@ -24,7 +24,6 @@ app.use('/public', express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookie());
-//app.use(session({ secret: "YOUR SECRET SALT", resave: true, saveUninitialized: true }));
 //express-sessionモジュールを設定する
 app.use(session( {
     secret: 'secret key',
@@ -37,60 +36,57 @@ app.use(session( {
 }));
 
 
-// ハッシュ値を求めるために必要なもの
-var crypto = require("crypto");
-var secretKey = "some_random_secret";
-var getHash = function(target){
-        var sha = crypto.createHmac("sha256", secretKey);
-            sha.update(target);
-                return sha.digest("hex");
-};
-
 //Expressを使用している場合はInitializeが必要
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-// passportでのセッション設定
-passport.serializeUser(function(user, done){
-  done(null, {email: user.email, _id: user._id});
+
+
+// passport が ユーザー情報をシリアライズすると呼び出されます
+passport.serializeUser(function (id, done) {
+  done(null, id);
 });
-passport.deserializeUser(function(serializedUser, done){
-  User.findById(serializedUser._id, function(err, user){
-      done(err, user);
+// passport が ユーザー情報をデシリアライズすると呼び出されます
+passport.deserializeUser(function (id, done) {
+  User.findById(id, (error, user) => {
+      if (error) {
+          return done(error);
+      }
+      done(null, user);
   });
 });
 
-passport.use( new LocalStrategy( 
-  {
-    userNameField:'username',
-    passwordField:'password',
-    passReqToCallback: true
-  }, 
-  function (req, username, password, done) {
-    process.nextTick( function() {
-      //処理書く
-    　//ユーザ名、パスワード不正時の処理を記述する
-      var hashedPassword = getHash(password);
-
-      if (!username) {
-          return done(null, false, { message: 'Username is incorrect' })
-      //↓にはPasswordチェック処理を実装してください。
-      } else if (hashedPassword !== password) {
-          return done(null, false, { message: 'Password is incorrect' })
-      } else {
-          console.log("username" + username);
-          return done(null, username);
-      }
+// passport における具体的な認証処理を設定します。
+passport.use(
+  "auth",
+  new LocalStrategy({
+      usernameField: "username",
+      passwordField: "password",
+      passReqToCallback: true
+  }, function (request, username, password, done) {
+      process.nextTick(() => {
+          User.findOne({ "email": username }, function (error, user) {
+              if (error) {
+                  return done(error);
+              }
+              if (!user || user.password != password) {
+                  return done(null, false, request.flash("message", "Invalid username or password."));
+              }
+              // 保存するデータは必要最低限にする
+              return done(null, user._id);
+          });
+      });
   })
-}));
+);
 
 
 
 
 
 // ルーティング設定
-//app.use('/routes', express.static(__dirname + '/routes'));
+// var indexRouter = require('./routes/index');
+// app.use('/', indexRouter);
 var files = fs.readdirSync(__dirname + '/routes');
 for (var file of files) {
     let buf = file.replace('.js', '').replace('index', '');
