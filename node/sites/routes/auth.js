@@ -30,9 +30,7 @@ mongoose.connect(
 //db.once('open', () => console.log('DB connection successful'));
 
 
-const dbp = require('../controllers/DBProcess.js')
-dbp.connect();
-dbp.init();
+
 
 
 /*

@@ -1,5 +1,5 @@
 
-var sqlite3 = require('sqlite3').verbose();
+//var sqlite3 = require('sqlite3').verbose();
 let path_db = `../db/db.sqlite3`;
 
 

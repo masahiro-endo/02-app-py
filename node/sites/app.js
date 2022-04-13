@@ -49,9 +49,9 @@ passport.serializeUser(function (id, done) {
 });
 // passport が ユーザー情報をデシリアライズすると呼び出されます
 passport.deserializeUser(function (id, done) {
-  User.findById(id, (error, user) => {
-      if (error) {
-          return done(error);
+  User.findById(id, (err, user) => {
+      if (err) {
+          return done(err);
       }
       done(null, user);
   });
