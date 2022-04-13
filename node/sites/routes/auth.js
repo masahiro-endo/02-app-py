@@ -8,7 +8,7 @@ const request = require('request')
 var app = express.Router();
 const User = require("../models/user.js");
 
-
+/*
 const USER_NAME = `dbadmin`;
 const USER_PASSWD = `admin`;
 const HOST_NAME = `cluster0.dxxx6.mongodb.net`;
@@ -24,6 +24,7 @@ mongoose.connect(
   CONNECT_STRING,
   options
 );
+*/
 
 //const db = mongoose.connection;
 //db.on('error', console.error.bind(console, 'DB connection error:'));

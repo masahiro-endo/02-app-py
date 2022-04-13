@@ -51,7 +51,7 @@ app.post('/', (req, res, next) => {
     //const HOST_NAME = `cluster0-shard-00-01.dxxx6.mongodb.net`;
     const DB_NAME = `myFirstDatabase`;
     const CONNECT_STRING = `mongodb+srv://${USER_NAME}:${USER_PASSWD}@${HOST_NAME}/${DB_NAME}?retryWrites=true&w=majority`;
-
+    /*
     options = {
         method: 'GET',
         host: `${USER_NAME}:${USER_PASSWD}@${HOST_NAME}`,
@@ -61,19 +61,8 @@ app.post('/', (req, res, next) => {
         url: `${CONNECT_STRING}`,
         proxy: 'http://test003:password@10.249.1.253:48080',
     };
-    /*
-    options = {
-        method: 'GET',
-        host: 'www.googleapis.com',
-        port: 443,
-        path: `/books/v1/volumes?q=isbn:${req.body.isbn}${myAPIkey}`,
-        json: true,
-        url: `https://www.googleapis.com/books/v1/volumes?q=isbn:${req.body.isbn}${myAPIkey}`,
-        proxy: 'http://test003:password@10.249.1.253:48080',
-    };
     */
-    console.log('url: ' + options.url);
-    
+    console.log('url: ' + options.url);    
     
     request(options, function (error, response, data) {
         if (!error && response.statusCode == 200) {
