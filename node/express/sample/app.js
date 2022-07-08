@@ -1,10 +1,24 @@
 
+ var path = require('path');
+ var fs = require('fs');
+
  const express = require('express');
  const app = express();
- const path = require('path');
- const api = require('./api/');
  
  const port = 8080
+
+
+ 
+
+ app.use(express.static(path.join(__dirname, 'public')));
+
+ // ルーティング設定
+ var files = fs.readdirSync(__dirname + '/routes');
+ for (var file of files) {
+    let buf = file.replace('.js', '').replace('index', '');
+    app.use('/' + buf, require('./routes/' + buf));
+ }
+
 
 
 
@@ -14,9 +28,6 @@ app.listen(port, () => {
 
  
 
- app.use('/api', api);
- 
- app.use(express.static(path.join(__dirname, 'public')));
  
  app.use((req, res) => {
    res.sendStatus(404);
