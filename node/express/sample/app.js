@@ -3,7 +3,6 @@
  var fs = require('fs');
 
  const express = require('express');
- var session = require("express-session");
  var bodyParser = require("body-parser");
  var cookie = require("cookie-parser");
  
@@ -22,16 +21,6 @@ app.use('/public', express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookie());
-//express-sessionモジュールを設定する
-app.use(session( {
-    secret: 'secret key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 1 * 24 * 60 * 1000,
-      secure: false
-    }
-}));
 
 
 

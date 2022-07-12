@@ -1,6 +1,18 @@
 {
-    "id": "W0001",
-    "title": "I Love Cats and Dogs",
-    "price": 3000000000000
+    "1": {  
+            "name": "Sammy",
+            "organization": "DigitalOcean",
+            "birth_year": "2012"
+        },
+    "2": {  
+            "name": "Tux",
+            "organization": "Linux",
+            "birth_year": "1996"
+        },
+    "3": {  
+            "name": "Moby Dock",
+            "organization": "Docker",
+            "birth_year": "2013"
+        }
 }
 

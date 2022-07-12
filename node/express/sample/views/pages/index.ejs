@@ -16,6 +16,16 @@
         <% }); %>
       </ul>
 
+      <table>
+        <% mascots.forEach(function(mascot) { %>
+            <tr>
+                <td><%= mascot.name %></td>
+                <td><%= mascot.organization %></td>
+                <td><%= mascot.birth_year %></td>
+            </tr>
+        <% }); %>
+      </table>
+
     </main>
  
 
