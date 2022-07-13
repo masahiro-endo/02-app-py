@@ -10,12 +10,18 @@ app.get('/', function (req, res) {
 
   var tagline = "No programming concept is complete without a cute animal mascot.";
 
-  // const personJSON = JSON.stringify(mascots)
-  // fs.writeFileSync('info.json', personJSON)
+  //const personJSON = JSON.stringify(mascots)
+  //fs.writeFileSync('info.json', personJSON)
 
-  const bufferData = fs.readFileSync('info.json') //02-app-py 直下
-  const dataJSON = bufferData.toString()
-  const mascots = JSON.parse(dataJSON)
+  //const bufferData = fs.readFileSync('info.json') //02-app-py 直下
+  //const dataJSON = bufferData.toString()
+  //const mascots = JSON.parse(dataJSON)
+
+  const { parse } = require('csv-parse/sync');
+  const inputData = fs.readFileSync('input.csv', { encoding : 'utf8' });
+  const mascots = parse(inputData, { columns : true });
+
+
 
 
 
