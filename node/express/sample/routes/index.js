@@ -8,7 +8,7 @@ var app = express.Router();
 // indexのテンプレートを呼び出す
 app.get('/', function (req, res) {
 
-  var tagline = "No programming concept is complete without a cute animal mascot.";
+  var tagline = "tagline.";
 
   //const personJSON = JSON.stringify(mascots)
   //fs.writeFileSync('info.json', personJSON)
@@ -22,7 +22,7 @@ app.get('/', function (req, res) {
   const mascots = parse(inputData, { columns : true });
 
 
-
+  console.log(__dirname + 'public')
 
 
   res.render('pages/index', {

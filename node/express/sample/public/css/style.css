@@ -1,0 +1,90 @@
+
+body {
+    font-family: "MS Gothic", sans-serif;
+    margin: 0;
+    padding: 40px 0 20px 0;
+  }
+  * html body {
+    overflow: hidden;
+  }
+  .container {
+    max-width: 960px;
+  }
+  table,th,td {
+    font-size: 10.0pt;
+  }
+  table {
+    margin-bottom: 20px;
+  }
+  th {
+    background: Lightgrey;
+    font-weight: bold;
+  }
+  table.border,
+  table.border > thead > tr > th,
+  table.border > tbody > tr > td  {
+    border:1px solid #000;
+    border-collapse: collapse;
+  }
+  .table-condensed > tbody > tr > td {
+    padding: 0 0 0 8px;
+  }
+  a:link {
+    color: Blue;
+  }
+  a:hover {
+    color: DarkGreen;
+  }
+  a:visited {
+    color: DarkMagenta;
+  }
+  
+  
+  
+  .pagetitle {
+    font-family: "游ゴシック", "ヒラギノ角ゴ Pro W3", "メイリオ", sans-serif;
+    text-align: center;
+    font-size: 14.0pt;
+    font-weight: bold;
+    line-height: 0px;
+  }
+  div#pageheader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background-color: #fff;
+    color: #000;
+  }
+  div#pagefooter {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background-color: #fff;
+    color: #000;
+  }  
+  div#pagecontents {
+    height: 100%;
+    overflow: auto;
+  }
+  
+  .col1 {
+    width: 165pt;
+  }
+  .col2 {
+    width: 60pt;
+  }
+  .col3 {
+    width: 140pt;
+  }
+  .col4 {
+    width: 40pt;
+  }
+  .col5 {
+    width: 250pt;
+  }
+  
+  

@@ -1,27 +1,22 @@
 
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-   </head>
+  <head>
+    <link rel='stylesheet' href='/public/css/style.css' />
+  </head>
    <body class="container">
  
    <main>
       <p><%= tagline %></p>
-      <ul>
-        <% mascots.forEach(function(mascot) { %>
-            <li>
-                <strong><%= mascot.name %></strong>
-                representing <%= mascot.organization %>, born <%= mascot.birth_year %>
-            </li>
-        <% }); %>
-      </ul>
 
       <table>
         <% mascots.forEach(function(mascot) { %>
             <tr>
-                <td><%= mascot.name %></td>
-                <td><%= mascot.organization %></td>
-                <td><%= mascot.birth_year %></td>
+                <td class="col1"><%= mascot.name %></td>
+                <td class="col2"><%= mascot.organization %></td>
+                <td class="col3"><%= mascot.birth_year %></td>
+                <td class="col4"></td>
+                <td class="col5"></td>
             </tr>
         <% }); %>
       </table>
