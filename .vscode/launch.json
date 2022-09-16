@@ -5,6 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Flask",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "C:\\Users\\helpdesk\\Downloads\\Portable\\files\\02-app-py\\flask\\chatbot\\app.py",
+                "FLASK_ENV": "development"
+            },
+            "args": [
+                "run",
+                "--no-debugger"
+            ],
+            "jinja": true
+        },
+        {
             "type": "pwa-node",
             "request": "launch",
             "name": "Launch Program",

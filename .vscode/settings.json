@@ -1,7 +1,8 @@
 {
-    "python.pythonPath": "c:\\Users\\mendo.MIYA\\Downloads\\Portable\\apps\\win\\python-3.9.5\\python.exe",
-    "python.analysis.extraPaths": [
-        "./fla",
+    "python.pythonPath": "c:\\Users\\helpdesk\\Downloads\\Portable\\apps\\win\\python-3.9.5\\python.exe",
+    "python.autoComplete.extraPaths": ["C:\\Users\\helpdesk\\Downloads\\Portable\\apps\\win\\python-3.9.5\\Lib\\site-packages"],
+        "python.analysis.extraPaths": [
+        "./flask",
         "./pyg",
         "./pyg/020-basis",
         "./pyg/021-3Ddungeon/source",
